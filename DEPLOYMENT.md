@@ -1,8 +1,14 @@
 # Static deployment
 
-## Current playable release
+## GitHub Pages destination
 
-Published October 4, 2026 through Sites: https://driver-sweet-lover.janjosef-miranda.chatgpt.site . Version 1 is public and requires no game account. The host confirmed deployment success; browser QA verified the rendered Mustang tutorial without captured warnings/errors. Physical Xbox/device checks still need player testing. GitHub publication is deferred; no GitHub repository was created or made public.
+The owner confirmed the signed-in GitHub account **mrndjnjsf** and authorized a public repository: https://github.com/mrndjnjsf/DriverSweetLover . The repository is created, the local checkout has an initial main commit and matching origin remote, and Pages is configured with **GitHub Actions** as its source. The first push/deployment is pending Git Credential Manager authorization for this account; the PC's previously saved jnjsfmrnd account does not have permission to push here. Use a command-scoped `credential.https://github.com.username=mrndjnjsf` when pushing so Git selects the correct account. Do not replace another account's credentials.
+
+After the push, run **Publish static game** manually on main, inspect both build/deploy jobs, then open the exact URL reported by GitHub. Do not mark the Pages release live before successful deployment and a browser check.
+
+## Alternate Sites release
+
+Published October 4, 2026 through Sites: https://driver-sweet-lover.janjosef-miranda.chatgpt.site . Version 1 is public and requires no game account. The host confirmed deployment success; browser QA verified the rendered Mustang tutorial without captured warnings/errors. Physical Xbox/device checks still need player testing. The owner subsequently selected GitHub Pages as the intended host; this alternate release is not the GitHub Pages deployment.
 
 Site identity is persisted in `.openai/hosting.json`; deployment/version identifiers and the exact source SHA are in `.openai/deployment.json`. Reuse this Site, never register it again. Its separate source checkout is `sites/driver-sweet-lover` and contains the exported release plus its hosting manifest. It is ignored by the main project's future GitHub repository. To update: build the main project, synchronize the new dist files into that checkout without disturbing its Git history/hosting identity, obtain a fresh credential for this Site, then use the Sites source helper to commit/push/package and save/deploy the verified version. Credentials go through hidden stdin only, never files or shell arguments.
 
