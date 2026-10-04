@@ -1,0 +1,37 @@
+#career-panel [hidden] { display: none !important; }
+#phone-collapse { margin-left: auto; padding: 6px 9px; border: 1px solid #a5b5a7; border-radius: 8px; background: #e5ecdf; color: #253d34; font-size: 10px; font-weight: 700; font-family: inherit; cursor: pointer; }
+#career-panel.is-compact { width: 210px; max-width: calc(100vw - 32px); background: transparent; border: 0; padding: 0; box-shadow: none; }
+#objective-watch { display: flex; flex-direction: column; gap: 6px; width: 100%; min-height: 98px; padding: 14px 16px; border: 5px solid #394c48; border-radius: 25px; background: #142a27; color: #edf4de; box-shadow: 0 6px 20px #0004; text-align: left; cursor: pointer; }
+#objective-watch .eyebrow { color: #b2c99d; font-size: 9px; }
+#watch-title { font-size: 14px; line-height: 1.2; }
+#watch-detail { font-size: 11px; color: #c7d8cf; line-height: 1.4; }
+#watch-progress { width: 100%; height: 5px; accent-color: #cce39f; }
+#phone-collapse:focus-visible, #objective-watch:focus-visible { outline: 3px solid #e5aa42; outline-offset: 3px; }
+@media (max-width: 700px) { #career-panel.is-compact { width: 170px; } #objective-watch { padding: 10px; min-height: 84px; } }
+
+.bathroom-stops {display:flex;flex-direction:column;gap:8px}.bathroom-stops button {padding:10px;border:1px solid #bdcdc1;border-radius:8px;background:#edf3e8;color:#263f35;font-size:11px;text-align:left}.bathroom-stops button.active {border-color:#208c80;background:#d6ede3}#need-meter span{font-size:11px}#need-percent{float:right}#need-fill{background:#4baf9d}#need-meter.urgent #need-fill{background:#d87739}#parking-status{position:fixed;left:50%;top:108px;transform:translateX(-50%);max-width:45vw;padding:10px 14px;border-radius:10px;background:#173c37e8;color:#f1f5df;font-size:12px;pointer-events:none;z-index:5}
+
+#dash-need{font-size:10px;color:#9dd3c2;margin-left:auto;margin-right:10px}#dash-need.urgent{color:#ffb876}
+
+.city-project{border-top:1px solid #c5d4c5;margin-top:14px;padding-top:9px}.city-project h3{font-size:13px;margin:7px 0}.city-project progress{width:100%;height:8px;accent-color:#47927a}.city-project small{display:block;line-height:1.5;color:#795f39}.city-project .phone-action{margin-top:9px}
+
+#rival-message{border-bottom:1px solid #bfcdba;padding-bottom:9px}#rival-message button{margin-bottom:7px}#respect-feedback{position:fixed;top:25%;left:50%;transform:translateX(-50%);padding:24px 32px;background:#183f39eb;color:#dcefa4;border:2px solid #87bfa1;border-radius:20px;text-align:center;z-index:12;font-size:24px;pointer-events:none}#respect-feedback.loss{color:#ffb78b;border-color:#d87742}#respect-feedback>div{height:9px;margin-top:13px;background:#51685a;border-radius:9px;overflow:hidden}#respect-bar{display:block;height:100%;background:currentColor;transition:width .6s}
+
+.appearance-choice{display:flex;flex-direction:column;gap:7px;font-size:12px;margin-bottom:9px}.appearance-choice select{width:100%;padding:8px;border:1px solid #bac9bd;border-radius:7px;background:#edf2e9;color:#283f36;font-size:11px}
+
+#owned-car,#driver-car{width:100%;padding:9px;border:1px solid #bac9bd;border-radius:8px;background:#edf2e9;color:#283f36;font:inherit;font-size:11px;margin:7px 0}
+#dealership,#driver-request{border-top:1px solid #c5d4c5;padding-top:10px;margin-top:12px}
+#dealership h3{font-size:13px}#dealership-cars{display:flex;flex-direction:column;gap:8px}
+#dealership-cars button,#driver-assign,#driver-reclaim,#driver-reserve,#driver-request-open{padding:10px;border:1px solid #bac9bd;border-radius:8px;background:#e5eddf;color:#283f36;font-size:11px;cursor:pointer}
+#driver-status{font-weight:600}#driver-last-job{padding:10px;background:#e4eddf;border-radius:8px;line-height:1.6}
+#drivers-app[hidden]{display:none}
+
+/* Car shortcuts belong to the phone, rather than covering the driving view. */
+#career-panel .garage-in-app{position:static;width:auto;margin:12px 0;padding:0}
+#hint[hidden]{display:none}
+#hint{max-width:min(320px,calc(100vw - 36px));pointer-events:none}
+#hint .eyebrow{color:#99501f}
+@media(max-width:900px) and (pointer:coarse){#hint:not([hidden]){display:block;left:14px;bottom:100px;max-width:250px;padding:9px 12px}}
+
+.car[hidden]{display:none}
+#starter-choice button{display:block;width:100%;padding:16px;margin:12px 0;border:1px solid #698562;border-radius:10px;background:#e8f0df;font-weight:800}

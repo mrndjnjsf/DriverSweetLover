@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- Editable coupe-v1 solid skin. Keep panel coordinates unchanged; change fills or add decals within a panel. -->
+<g id="right-side"><rect x="0" y="0" width="512" height="256" fill="#ce6c39"/></g>
+<g id="left-side"><rect x="512" y="0" width="512" height="256" fill="#ce6c39"/></g>
+<g id="hood-deck"><rect x="0" y="256" width="512" height="256" fill="#ce6c39"/></g>
+<g id="underside"><rect x="512" y="256" width="512" height="256" fill="#273338"/></g>
+<g id="rear"><rect x="0" y="512" width="512" height="256" fill="#ce6c39"/></g>
+<g id="front"><rect x="512" y="512" width="512" height="256" fill="#ce6c39"/></g>
+<g id="roof"><rect x="0" y="768" width="512" height="256" fill="#ce6c39"/></g>
+</svg>

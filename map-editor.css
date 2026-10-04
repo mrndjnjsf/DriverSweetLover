@@ -1,0 +1,19 @@
+.map-editor[hidden] { display: none; }
+.map-editor { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: #081319dc; color: #edf2ed; font: 14px/1.4 system-ui, sans-serif; }
+.map-editor * { box-sizing: border-box; }
+.map-editor-panel { width: min(96vw, 900px); max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #62767b; border-radius: 12px; background: #18292e; box-shadow: 0 16px 65px #0008; }
+.map-editor-panel header { position: static; top: auto; left: auto; right: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #40575d; }
+.map-editor-panel header strong { display: block; font-size: 17px; letter-spacing: .09em; }
+.map-editor-panel header small { display: block; color: #b4c4c2; }
+.map-editor-panel button, .map-editor-panel select, .map-editor-panel input { font: inherit; }
+.map-editor-panel button, .map-editor-panel select { border: 1px solid #657c7e; border-radius: 6px; padding: 5px 9px; background: #263c42; color: #f4f6f2; cursor: pointer; }
+.map-editor-panel button:hover { background: #385157; }
+.map-editor-panel button:disabled { opacity: .4; cursor: default; }
+.map-editor-panel header button { font-size: 22px; line-height: 1; }
+.map-editor-tools, .map-editor-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 15px; }
+.map-editor-tools label { display: flex; align-items: center; gap: 5px; }
+.map-editor-tools input { width: 75px; accent-color: #eab462; }
+.map-editor-scroll { min-height: 220px; overflow: auto; background: #68816d; margin: 0 15px; border: 1px solid #849996; }
+.map-editor-scroll canvas { display: block; cursor: crosshair; }
+.map-editor-actions { border-top: 1px solid #40575d; margin-top: 10px; }
+.map-editor-message { flex: 1 1 160px; min-width: 130px; color: #e6c48c; }

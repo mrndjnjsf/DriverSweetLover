@@ -1,0 +1,84 @@
+/* Panoramic, illuminated instrument panel. Kept separate from phone styling. */
+.dashboard{--dash-lit:#bfffd7;--dash-muted:#74918a;--dash-accent:#edb95d;box-sizing:border-box;position:fixed;bottom:54px;top:auto;left:50%;width:min(1000px,calc(100vw - 32px));max-width:none;display:grid;grid-template-columns:105px 64px minmax(210px,1fr) 115px 94px;gap:14px;align-items:center;padding:14px 24px 16px;color:var(--dash-lit);background:linear-gradient(175deg,#182b2e,#071517 65%);border:1px solid #3d5955;border-top:4px solid #54736b;border-radius:65px 65px 19px 19px;box-shadow:0 12px 26px #07110ed9,inset 0 2px 0 #77968b33;backdrop-filter:none;font-variant-numeric:tabular-nums}
+.dash-header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 10px 4px;color:var(--dash-muted);font-size:8px;letter-spacing:2px;text-transform:uppercase}
+.dash-header strong{color:#c9dacd;font-weight:500;letter-spacing:1.4px}
+.dashboard .engine{grid-column:1/-1;grid-row:2;min-width:0;position:relative;padding-bottom:5px;border-bottom:1px solid #28423e}
+.dashboard .rpm-label{display:flex;align-items:baseline;gap:5px;color:var(--dash-muted);font-size:8px;letter-spacing:1px}
+.dashboard .rpm-label>span{font-family:Consolas,monospace;font-size:18px;color:var(--dash-lit);text-shadow:0 0 9px #8affe34d}
+.dashboard .rpm-label b{float:none;margin:0 0 0 auto;font-size:9px;letter-spacing:1.2px}
+.dashboard .tach{height:21px;margin-top:5px;border-radius:16px 4px 2px 2px;background:#19322f;clip-path:polygon(0 80%,4% 12%,100% 0,100% 100%,0 100%)}
+.dashboard .tach::before{content:'';position:absolute;inset:0;z-index:1;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(2.5% - 3px),#091c1c calc(2.5% - 3px),#091c1c 2.5%);pointer-events:none}
+.dashboard #rpm-fill{background:#a6f5c4;box-shadow:0 0 10px #94f9cf66;transition:width .06s linear}
+.dashboard .tach::after{width:3px;background:#ff855e;z-index:2}
+.dashboard .ticks{font:9px Consolas,monospace;color:#93b6a6;margin-top:4px}
+.dashboard .ticks span:last-child{color:#ee8761}
+.dashboard .power{display:flex;gap:12px;align-items:center;margin-top:8px}
+.dashboard .power>span{width:150px;color:var(--dash-muted);font-size:8px;letter-spacing:1px}
+.dashboard .power-track{height:3px;flex:1;margin:0;background:#183631}
+.dashboard .speed,.dashboard .gear{min-width:0;text-align:center;padding:0;border:0}
+.dashboard .speed>span{font:64px/.95 Consolas,monospace;color:#e8fff0;letter-spacing:-4px;text-shadow:0 0 15px #a2f6d342}
+.dashboard .gear>span{font:40px/1 Consolas,monospace;color:var(--dash-accent);text-shadow:0 0 12px #edb95d40}
+.dashboard .speed small,.dashboard .gear small{font-size:8px;color:var(--dash-muted);letter-spacing:2px}
+.dash-vitals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 16px;padding:3px 18px;border-left:1px solid #28423e;border-right:1px solid #28423e}
+.dash-vital{min-width:0;font-size:8px;letter-spacing:1px;color:var(--dash-muted)}
+.dash-vital b{float:right;color:var(--dash-lit);font:10px Consolas,monospace;letter-spacing:0}
+.dash-vital>i{display:block;height:4px;background:#203932;margin-top:5px;overflow:hidden}
+.dash-vital>i>em{display:block;height:100%;width:100%;background:var(--dash-lit);transition:width .25s ease;box-shadow:0 0 6px #bfffd755}
+.dash-vital.warning b{color:#efbd60}.dash-vital.warning>i>em{background:#efbd60}
+.dash-vital.critical b{color:#ff805e}.dash-vital.critical>i>em{background:#ff805e}
+.dashboard .pedals{width:auto;min-width:0;display:block}
+.dashboard .pedals label{font-size:8px;letter-spacing:1px;margin:8px 0;color:var(--dash-muted)}
+.dashboard .pedals label span{color:var(--dash-lit);font-family:Consolas,monospace}
+.dashboard .pedal{height:6px;background:#203932}
+.dashboard .pedal i{background:#9beaca}.dashboard #clutch-bite{border-color:#ffbd61;width:2px;background:#ffbd61}
+.dashboard #clutch-mode{display:block;font-size:7px;margin-top:4px;color:#7da79a;letter-spacing:1px}
+.dashboard .shifter{display:block;width:94px;padding:0 0 0 10px;border-left:1px solid #28423e}
+.dashboard .shifter>small{font-size:7px;color:var(--dash-muted);letter-spacing:1px}
+.dashboard .shift-grid{background:linear-gradient(90deg,transparent 15%,#486c60 15%,#486c60 18%,transparent 18%,transparent 48%,#486c60 48%,#486c60 51%,transparent 51%,transparent 81%,#486c60 81%,#486c60 84%,transparent 84%),linear-gradient(180deg,transparent 48%,#486c60 48%,#486c60 52%,transparent 52%)}
+.dashboard .shift-grid span{background:#102522;color:#729b8b;font:11px Consolas,monospace}
+.dashboard .shift-grid span.active{color:#e9fff0;background:#315749;text-shadow:0 0 5px #bfffd7}
+.dashboard #shift-neutral.active{color:var(--dash-lit)}
+.dashboard #shift-knob{width:19px;height:19px;border:2px solid #c2ffdc;background:radial-gradient(circle at 35% 30%,#e8fff699,#79bb9944 60%,#1f4c3999);box-shadow:0 0 8px #a1f5c955,inset 0 1px 3px #ffffff88;transition:left .09s ease-out,top .09s ease-out}
+.dashboard #shift-knob.mouse-held{border-color:#ffd38c;box-shadow:0 0 10px #f4bf6466;background:#ffd38c44}
+.dashboard.slipping .shifter>small:first-child{color:#ffba66}
+
+/* Low, full-width dash: vitals flank the central driving instruments. */
+.dashboard{bottom:43px;width:calc(100vw - 28px);max-width:1600px;grid-template-columns:minmax(135px,1fr) minmax(450px,2.6fr) minmax(135px,1fr);gap:22px;padding:10px 26px;border-radius:32px 32px 12px 12px}
+.dash-center{min-width:0;display:grid;grid-template-columns:70px 42px minmax(110px,1fr) 80px;gap:5px 14px;align-items:center}
+.dash-header{grid-column:1/-1;grid-row:1;font-size:7px;padding:0;letter-spacing:1px}
+.dash-header>span:first-child{display:none}
+.dashboard .engine{grid-column:1/4;grid-row:2;padding-bottom:3px}
+.dashboard .rpm-label>span{font-size:15px}.dashboard .rpm-label b{font-size:8px}
+.dashboard .tach{height:15px;margin-top:3px}.dashboard .ticks{font-size:8px;margin-top:2px}
+.dashboard .power{margin-top:4px;gap:8px}.dashboard .power>span{width:140px;font-size:7px}
+.dashboard .speed{grid-column:1;grid-row:3}.dashboard .speed>span{font-size:40px}
+.dashboard .gear{grid-column:2;grid-row:3}.dashboard .gear>span{font-size:29px}
+.dashboard .speed small,.dashboard .gear small{font-size:7px;margin-top:2px}
+.dashboard .pedals{grid-column:3;grid-row:3;display:flex;align-items:start;gap:12px}
+.dashboard .pedals label{flex:1;min-width:0;margin:3px 0;font-size:7px}.dashboard .pedal{height:5px}
+.dashboard .shifter{grid-column:4;grid-row:2/4;width:80px;padding-left:8px}
+.dash-vitals{grid-template-columns:minmax(0,1fr);gap:12px;padding:5px 0;border:0}
+.dash-vitals-left{padding-right:22px;border-right:1px solid #28423e}
+.dash-vitals-right{padding-left:22px;border-left:1px solid #28423e}
+.dash-vital{font-size:9px}.dash-vital b{font-size:12px}.dash-vital>i{height:5px;margin-top:4px}
+#hint{bottom:225px}#mouse-lock-prompt{bottom:230px}
+#career-panel{width:300px;top:108px;right:24px}
+.phone-shell{min-height:0;padding:12px}
+.phone-screen{height:clamp(220px,calc(100vh - 430px),400px);padding:16px}
+.phone-status{font-size:10px}.phone-head .eyebrow{font-size:10px}.phone-head strong{font-size:19px}
+#career-panel .phone-view p{font-size:12px}.phone-view h2{font-size:19px}.phone-view small{font-size:11px}
+.phone-app-grid{gap:14px 7px}.phone-app-grid button{font-size:11px}.phone-app-grid button span{width:58px;height:56px;font-size:26px}
+.phone-action{font-size:12px;padding:12px 8px}#mini-map{height:230px}.nav-actions button{font-size:10px;padding:8px 3px}
+@media(max-height:850px){#hint .eyebrow,#hint p{display:none}}
+@media(max-width:1000px){.dashboard{grid-template-columns:minmax(100px,1fr) minmax(385px,3fr) minmax(100px,1fr);gap:12px;padding:9px 16px}.dash-center{grid-template-columns:58px 32px minmax(95px,1fr) 70px;column-gap:9px}.dashboard .shifter{width:70px;padding-left:4px}.dash-vitals-left{padding-right:12px}.dash-vitals-right{padding-left:12px}.dash-vital{font-size:8px}.dashboard .pedals{gap:7px}#career-panel{width:270px;right:14px;top:95px}.phone-screen{height:clamp(200px,calc(100vh - 420px),370px)}.phone-app-grid button span{width:52px;height:50px}}
+@media(max-width:700px){.dashboard{grid-template-columns:1fr 1fr;gap:9px;padding:10px 14px;width:calc(100vw - 20px);bottom:53px}.dash-center{grid-column:1/-1;grid-row:1;grid-template-columns:55px 30px minmax(85px,1fr) 65px;gap:4px 7px}.dashboard .shifter{width:65px}.dash-vitals{grid-row:2;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;border:0;padding:4px 0 0}.dash-vitals-left{grid-column:1}.dash-vitals-right{grid-column:2}.dash-vital{font-size:7px;letter-spacing:0}.dash-vital b{font-size:8px;float:none;display:block;margin-top:3px}.dash-vital>i{height:3px}.dashboard .power>span{width:125px;font-size:6px}.dashboard .rpm-label b{font-size:6px}.dashboard .ticks{font-size:7px}.dashboard .pedals label{font-size:6px}.dash-header{font-size:6px}.dashboard .speed>span{font-size:34px}#career-panel{width:230px;top:95px;right:10px}.phone-screen{height:clamp(180px,calc(100vh - 440px),360px);padding:10px}.phone-app-grid{gap:9px 4px}.phone-app-grid button span{width:45px;height:44px;font-size:23px}#hint{display:none}}
+@media(max-width:450px){#career-panel{width:195px;top:97px;right:8px}.phone-shell{padding:8px}.phone-screen{height:clamp(170px,calc(100vh - 470px),330px)}.phone-app-grid button span{width:40px;height:40px;font-size:21px}.phone-app-grid button{font-size:9px}.phone-head{padding:9px 5px}.phone-head strong{font-size:16px}.phone-head .eyebrow{font-size:8px}.phone-status{font-size:8px}#career-panel .phone-view p{font-size:10px}.phone-action{font-size:10px}#mini-map{height:155px}.garage{width:155px}.garage .car{padding:10px 7px;font-size:10px}.garage .car small{font-size:7px}}
+@media(max-width:900px) and (pointer:coarse){.dashboard{top:auto;bottom:112px}.dashboard .pedals,.dashboard .shifter,.dashboard .rpm-label b{display:block}.dashboard .pedals{display:flex}#mouse-lock-prompt{display:none}#career-panel{top:70px}.phone-shell{min-height:0}.phone-action{font-size:10px;padding:9px}.phone-view small{font-size:9px}.phone-view h2{font-size:15px}}
+@media(max-height:600px){#career-panel{top:80px;width:220px}.phone-screen{height:max(90px,calc(100vh - 370px))}.phone-shell{padding:7px}.phone-head{padding:7px 6px}.phone-app-grid button span{width:40px;height:38px}.phone-app-grid{gap:7px}#hint{display:none}}
+@media(prefers-reduced-motion:reduce){.dashboard #rpm-fill,.dashboard #shift-knob,.dash-vital>i>em{transition:none}}
+
+.dashboard.automatic .pedals label:first-child,.dashboard.automatic .shift-grid,.dashboard.automatic .shifter>small:first-child{display:none}
+.dashboard.automatic .shifter{min-width:90px}
+.dashboard.automatic .gear>span{font-size:32px}
+#career-panel[hidden]{display:none}
+body.automatic-car .touch-clutch{display:none}
