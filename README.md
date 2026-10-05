@@ -1,5 +1,7 @@
 # Driver Sweet Lover
 
+**[Play online on GitHub Pages](https://mrndjnjsf.github.io/DriverSweetLover/)** · [Source repository](https://github.com/mrndjnjsf/DriverSweetLover)
+
 Static hosting is supported without a backend. See [DEPLOYMENT.md](DEPLOYMENT.md) for the isolated release build and GitHub Pages workflow, and [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for the audit scope, fixes, and limits.
 
 Normal play starts the automatic Mustang tutorial whenever no career save exists, even if an old tutorial-complete flag remains. After the accident, choose the Eclipse or Civic. Returning players with a valid chosen-starter save resume their career. Unreadable saves remain protected for recovery; sandbox/profile and the local developer test drive keep their explicit startup modes.

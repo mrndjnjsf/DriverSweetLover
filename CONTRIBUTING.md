@@ -1,6 +1,6 @@
 # Contributing
 
-This project is being prepared for open-source release and has no public contribution process or project license yet. The owner will choose a license and publication location before accepting outside contributions.
+This playable prototype has a public source repository but no project license or formal contribution process yet. Public visibility does not grant an open-source license. The owner will choose a license before accepting outside contributions.
 
 For local development, run `node server.mjs` and visit <http://localhost:5174/>. Run `node --test tests/*.test.mjs` for the rule checks. No package installation is needed. Keep driving physics, vehicle condition, career transactions, and map data separate from DOM and Three.js code. Add a focused behavior test when changing a rule that can affect saves, money, gear selection, damage, or route validity.
 

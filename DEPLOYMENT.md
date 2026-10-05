@@ -2,9 +2,11 @@
 
 ## GitHub Pages destination
 
-The owner confirmed the signed-in GitHub account **mrndjnjsf** and authorized a public repository: https://github.com/mrndjnjsf/DriverSweetLover . The repository is created, the local checkout has an initial main commit and matching origin remote, and Pages is configured with **GitHub Actions** as its source. The first push/deployment is pending Git Credential Manager authorization for this account; the PC's previously saved jnjsfmrnd account does not have permission to push here. Use a command-scoped `credential.https://github.com.username=mrndjnjsf` when pushing so Git selects the correct account. Do not replace another account's credentials.
+The owner confirmed **mrndjnjsf** and authorized the public repository https://github.com/mrndjnjsf/DriverSweetLover . GitHub Pages is live at **https://mrndjnjsf.github.io/DriverSweetLover/**. First deployment succeeded October 4, 2026: https://github.com/mrndjnjsf/DriverSweetLover/actions/runs/37247826843 from commit `eb8ef4649511a68c7ec7d89059c48d0175a8de3d`. Build and deploy jobs passed; browser verification showed the rendered Mustang tutorial with no captured warnings/errors. The release was checked by the workflow's 162-test suite. Physical controller checks remain separate.
 
-After the push, run **Publish static game** manually on main, inspect both build/deploy jobs, then open the exact URL reported by GitHub. Do not mark the Pages release live before successful deployment and a browser check.
+The local main branch tracks origin/main. Pages uses **GitHub Actions** as its source. Git Credential Manager is authenticated as mrndjnjsf; select this account with the repository-scoped `credential.https://github.com.username=mrndjnjsf` setting or a command-scoped override. Do not replace the PC's other GitHub account credentials.
+
+For updates, push the reviewed source to main, run **Publish static game** manually, inspect both jobs, then verify the exact deployed URL. Ordinary pushes run CI; they do not automatically replace the playable release.
 
 ## Alternate Sites release
 
