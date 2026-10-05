@@ -10,6 +10,7 @@ import { CITY_PROJECTS } from './config/city-projects.js';
 import { createFleet, validateFleet, activeVehicle, assignedDriver, dealershipOpen, driverAvailable, fleetEligibility, fleetJobQuote } from './fleet.js';
 import { DEALERSHIP, DRIVERS, FLEET } from './config/fleet.js';
 import { APPEARANCES } from './config/appearance.js';
+import { CONTROL_OPTIONS } from './control-tuning.js';
 
 // Browser-local career data. Money is always integer US cents.
 export const SAVE_VERSION = 2;
@@ -340,6 +341,16 @@ export function setVehicleCondition(career, condition, ownedId = null) {
     parts: Object.fromEntries(Object.entries(condition.parts).map(([key, part]) => [key, { ...part }])),
     oil: { ...condition.oil },
   };
+  return next;
+}
+
+export function configurePedals(career,kind,value){
+  const next=copyCareer(career),condition=activeVehicle(next);
+  if(!Object.hasOwn(CONTROL_OPTIONS,kind)||!CONTROL_OPTIONS[kind].includes(value))throw new Error('Unknown pedal setting');
+  const part=kind==='throttle'?'engine':'clutch';
+  if(!condition.parts[part].sku.endsWith(':upgraded'))throw new Error(`Upgrade the ${part} first`);
+  if(assignedDriver(next,next.activeVehicleId))throw new Error('Reclaim the car before tuning');
+  condition.controlTune={...condition.controlTune,[kind]:value};
   return next;
 }
 

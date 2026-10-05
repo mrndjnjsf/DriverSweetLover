@@ -1,5 +1,6 @@
 import { VEHICLES } from "./config/vehicles.js";
 import { CLUTCH } from "./config/gameplay.js";
+import { controlSettings, validateControlTune } from './control-tuning.js';
 // Career vehicle condition. Health is 0..1; prices are integer US cents.
 // Driving samples use seconds, metres/second, kilometres, radians/second and °C.
 import { fuelCapacity, fuelUsed } from './fuel.js';
@@ -56,7 +57,18 @@ export function validateVehicleCondition(condition) {
   finite(condition.oil.distanceKm, 'oil distanceKm', 0, 10_000_000);
   finite(condition.oil.ageDays, 'oil ageDays', 0, 100_000);
   finite(condition.oil.condition, 'oil condition', 0, 1);
+  validateControlTune(condition);
   return condition;
+}
+
+// Development reset restores consumables without discarding paid upgrades/tuning.
+export function resetVehicleCondition(condition){
+  validateVehicleCondition(condition);
+  const next=createVehicleCondition(condition.vehicleId);
+  next.odometerKm=condition.odometerKm;
+  for(const key of PART_KEYS)next.parts[key].sku=condition.parts[key].sku;
+  if(condition.controlTune)next.controlTune={...condition.controlTune};
+  return next;
 }
 
 function copyCondition(condition) {
@@ -67,6 +79,7 @@ function copyCondition(condition) {
     fuelLiters: condition.fuelLiters,
     parts: Object.fromEntries(PART_KEYS.map(key => [key, { ...condition.parts[key] }])),
     oil: { ...condition.oil },
+    ...(condition.controlTune?{controlTune:{...condition.controlTune}}:{}),
   };
 }
 
@@ -76,7 +89,7 @@ export function clutchFrictionWork(vehicleId, health, sample) {
   if (VEHICLES[vehicleId]?.transmission === 'automatic') return 0;
   const { clutchPosition: pedal = 1, throttle = 0, engineRpm = 0, dtSeconds: dt = 0 } = sample;
   if (pedal >= 1 || sample.gear === 0 || sample.running === false) return 0;
-  const bite = clutchBitePoint(health);
+  const bite = sample.clutchBitePoint ?? clutchBitePoint(health);
   const windowTop = Math.max(CLUTCH.releaseWindowTop, bite + CLUTCH.wornReleaseWindowWidth);
   const inReleaseWindow = sample.clutchReleasing && pedal >= bite && pedal < windowTop;
   const hardThrottle = clamp((throttle - CLUTCH.hardThrottleThreshold) / (1 - CLUTCH.hardThrottleThreshold), 0, 1);
@@ -105,7 +118,7 @@ export function applyDrivingWear(condition, sample) {
   const upgraded = key => partTier(next.vehicleId, key, next.parts[key]) === 'upgraded';
 
   const clutchWorkJ = finite(sample.clutchWorkJ ?? clutchFrictionWork(next.vehicleId, next.parts.clutch.health,
-    { ...sample, clutchPosition, slipRadPerSecond: slip, throttle, engineRpm, dtSeconds: dt }), 'clutchWorkJ');
+    { ...sample, clutchBitePoint:performanceModifiers(next).clutchBitePoint, clutchPosition, slipRadPerSecond: slip, throttle, engineRpm, dtSeconds: dt }), 'clutchWorkJ');
   next.parts.clutch.health = clamp(next.parts.clutch.health - clutchWorkJ / (WEAR_CONFIG.clutchLifeWorkJ * (upgraded('clutch') ? 1.25 : 1)), 0, 1);
 
   const brakeWorkJ = brake * specs.massKg * 10 * speed * dt;
@@ -138,9 +151,9 @@ export function applyShiftWear(condition, clutchPosition) {
   const position = finite(clutchPosition, 'clutchPosition', 0, 1);
   if (position >= 1) return condition;
   const next = copyCondition(condition);
-  const bite = clutchBitePoint(next.parts.clutch.health);
+  const bite = performanceModifiers(next).clutchBitePoint;
   const early = CLUTCH.afterBiteShiftWear * clamp((1 - position) / (1 - bite), 0, 1)
-    + CLUTCH.beforeBiteExtraShiftWear *((bite - position) / bite, 0, 1);
+    + CLUTCH.beforeBiteExtraShiftWear * clamp((bite - position) / bite, 0, 1);
   const upgraded = partTier(next.vehicleId, 'clutch', next.parts.clutch) === 'upgraded';
   next.parts.clutch.health = clamp(next.parts.clutch.health
     - WEAR_CONFIG.earlyShiftHealthCost * early / (upgraded ? 1.25 : 1), 0, 1);
@@ -182,7 +195,7 @@ export function performanceModifiers(condition) {
   const spec = key => PART_CATALOG[key][tier(key)];
   return {
     clutchCapacity: spec('clutch').torqueCapacity * clutchTorqueFactor(parts.clutch.health),
-    clutchBitePoint: clutchBitePoint(parts.clutch.health),
+    clutchBitePoint: clamp(clutchBitePoint(parts.clutch.health)+controlSettings(condition).biteOffset,.5,.98),
     brakeEffectiveness: Math.min(quality('brakePads'), quality('brakeRotors')),
     brakeFadeResistance: spec('brakePads').fadeResistance
       * spec('brakeRotors').fadeResistance,

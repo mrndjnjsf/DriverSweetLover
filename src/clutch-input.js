@@ -9,12 +9,12 @@ export function toggleClutchInput(control){
  return {...control,mode:control.mode==='direct'?'pressure':'direct'};
 }
 
-export function readClutchInput(control,trigger,dt){
+export function readClutchInput(control,trigger,dt,settings=CLUTCH){
  const amount=clamp(trigger,0,1);
  if(control.mode==='direct')return {...control,value:amount};
  const time=clamp(dt,0,.05);
  let value=control.value;
- if(amount>CLUTCH.triggerBuildThreshold)value+=time*CLUTCH.controllerBuildPerSecond;
- else if(amount<CLUTCH.triggerReleaseThreshold)value-=time*CLUTCH.controllerReleasePerSecond;
+ if(amount>settings.triggerBuildThreshold)value+=time*settings.controllerBuildPerSecond;
+ else if(amount<settings.triggerReleaseThreshold)value-=time*settings.controllerReleasePerSecond;
  return {...control,value:clamp(value,0,1)};
 }

@@ -1,9 +1,9 @@
 import { THROTTLE } from './config/gameplay.js';
 
-export function advanceKeyboardThrottle(value, buildHeld, fullHeld, dt) {
+export function advanceKeyboardThrottle(value, buildHeld, fullHeld, dt, settings=THROTTLE) {
   if (fullHeld) return 1;
-  const rate = buildHeld ? THROTTLE.keyboardBuildPerSecond : -THROTTLE.keyboardReleasePerSecond;
-  const taper = THROTTLE.keyboardPressureTaper;
+  const rate = buildHeld ? settings.keyboardBuildPerSecond : -settings.keyboardReleasePerSecond;
+  const taper = settings.keyboardPressureTaper;
   const elapsed = Math.max(0, dt);
   // Integrate pressure-dependent pedal speed exactly so input feel is the same
   // at different frame rates. Release retraces the same curve at half speed.

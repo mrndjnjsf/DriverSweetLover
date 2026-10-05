@@ -69,7 +69,8 @@ function stepSingle(s,input,car,dt){
  // Advertised torque is brake (net crank) torque. Subtracting full internal
  // friction again at wide-open throttle erased much of the Si's high-rpm power.
  const friction=s.running?(19+s.rpm*.003)*(1-s.throttle):42;
- s.rpm=s.blown?0:Math.max(0,(omega+(combustion+idle-friction-coupling)/(car.engineInertia||.32)*dt)*30/Math.PI);
+ const engineAcceleration=(combustion+idle-friction-coupling)/(car.engineInertia||.32);
+ s.rpm=s.blown?0:Math.max(0,(omega+engineAcceleration*(engineAcceleration>0&&!automatic?DRIVING.rpmRiseMultiplier:1)*dt)*30/Math.PI);
  if(automatic&&s.running)s.rpm=clamp(s.rpm,DRIVING.initialIdleRpm,car.redline);
  if(s.running&&(!ratio||engagement<.22))s.rpm=Math.min(s.rpm,car.redline);
  if(s.running&&!automatic){

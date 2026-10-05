@@ -1,4 +1,10 @@
 import { APPEARANCES } from './config/appearance.js';
+import { controlSettings, CONTROL_OPTIONS } from './control-tuning.js';
+import { createNavigationRouter } from './navigation.js';
+const navigate=createNavigationRouter();
+let navigationPoints=[];
+import { configurePedals } from './career.js';
+import { resetVehicleCondition } from './condition.js';
 import { createActivityMarket, advanceActivityMarket, consumeActivityOffer, activitySummary } from './activity-market.js';
 import { activeVehicle, driverAvailable } from './fleet.js';
 import { FLEET } from './config/fleet.js';
@@ -267,8 +273,9 @@ let cachedCondition=null,cachedCarKey='',cachedTunedCar=null;
 function tunedCarFor(condition){
  if(condition===cachedCondition&&selected===cachedCarKey)return cachedTunedCar;
  const modifiers=performanceModifiers(condition),baseCar=cars[selected];
+ const pedals=controlSettings(condition);
  cachedCondition=condition;cachedCarKey=selected;
- cachedTunedCar={...baseCar,peakTorque:baseCar.peakTorque*modifiers.enginePower,horsepower:baseCar.horsepower*modifiers.enginePower,traction:baseCar.traction*modifiers.tireGrip,clutchCapacity:modifiers.clutchCapacity,clutchBitePoint:modifiers.clutchBitePoint,brakeEffectiveness:modifiers.brakeEffectiveness};
+ cachedTunedCar={...baseCar,pedals,engineInertia:baseCar.engineInertia/pedals.rpmResponse,peakTorque:baseCar.peakTorque*modifiers.enginePower,horsepower:baseCar.horsepower*modifiers.enginePower,traction:baseCar.traction*modifiers.tireGrip,clutchCapacity:modifiers.clutchCapacity,clutchBitePoint:modifiers.clutchBitePoint,brakeEffectiveness:modifiers.brakeEffectiveness};
  return cachedTunedCar;
 }
 function persistCareer(){
@@ -353,7 +360,12 @@ function updateCareerHud(){
  const job=career.jobs.active;
  const destination=currentDestination();
  const stopPoint=navStop?(navStop.x!==undefined?navStop:gridPoint(map,navStop.col,navStop.row)):null;
- phoneView.render(trackedObjective({job,destination:destination===null?null:job.status==='accepted'?(pickupParking()||nodePoint(destination)):nodePoint(destination),navigation:stopPoint?{...stopPoint,label:['bathroom','park','rival'].includes(navigationKind)?navStop.label:navigationKind==='shop'?'Visit Mini Lube':navigationKind==='fuel'?'Refuel':'Visit Garage'}:null,race:dragRace,raceProgress:raceProgress(),position:state}));
+ const jobPoint=destination===null?null:job.status==='accepted'?(pickupParking()||nodePoint(destination)):nodePoint(destination);
+ const objective=trackedObjective({job,destination:jobPoint,navigation:stopPoint?{...stopPoint,label:['bathroom','park','rival'].includes(navigationKind)?navStop.label:navigationKind==='shop'?'Visit Mini Lube':navigationKind==='fuel'?'Refuel':'Visit Garage'}:null,race:dragRace,raceProgress:raceProgress(),position:state});
+ const gps=navigate(map,state,raceActive()?dragCourse?.finish:stopPoint||jobPoint);
+ navigationPoints=gps.points;
+ if(stopPoint||jobPoint){if(!raceActive())objective.detail=gps.detail;$('nav-status').textContent=objective.title+' · '+gps.detail;}
+ phoneView.render(objective);
  if(sandboxMode){$('job-status').textContent='Healthy-car practice · no saves, wear, fines, or earnings';$('job-button').disabled=true;destinationMarker.visible=false;return;}
  if(saveRecovered){$('job-status').textContent='Saved career could not be read. Open Garage to recover.';$('job-button').disabled=true;destinationMarker.visible=false;return;}
  $('job-button').disabled=false;
@@ -453,14 +465,15 @@ function handleJobButton(){
   persistCareer();updateCareerHud();
  }catch(error){notify(error.message);}
 }
-function drawMiniMap(){
- const canvas=$('mini-map'),ctx=canvas.getContext('2d'),near=nearestRoadPoint(map,state.x,state.z),unit=18,cx=canvas.width/2,cy=canvas.height/2;
+function drawMiniMap(canvas=$('mini-map')){
+ const ctx=canvas.getContext('2d'),near=nearestRoadPoint(map,state.x,state.z),unit=18,cx=canvas.width/2,cy=canvas.height/2;
  ctx.fillStyle='#dbe4d3';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#56685e';ctx.lineWidth=4;
  for(let row=near.row-5;row<=near.row+5;row++)for(let col=near.col-5;col<=near.col+5;col++){
   const x=cx+(col-near.col)*unit,y=cy+(row-near.row)*unit;
   if(roadOpen(map,col,row,'east')){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+unit,y);ctx.stroke();}
   if(roadOpen(map,col,row,'south')){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+unit);ctx.stroke();}
  }
+ if(navigationPoints.length){ctx.strokeStyle='#e9b343';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx+(state.x-near.x)/map.blockSize*unit,cy-(state.z-near.z)/map.blockSize*unit);for(const point of navigationPoints)ctx.lineTo(cx+(point.x-near.x)/map.blockSize*unit,cy-(point.z-near.z)/map.blockSize*unit);ctx.stroke();}
  for(const location of map.locations){
   const x=cx+(location.col-near.col)*unit,y=cy+(location.row-near.row)*unit;
   if(x<0||x>canvas.width||y<0||y>canvas.height)continue;
@@ -521,6 +534,18 @@ function renderShop(){
   addService(`${name} replacement`,{type:'replace',partKey:key},condition.parts[key].health);
   addService(`${name} upgrade`,{type:'upgrade',partKey:key},condition.parts[key].health);
  }
+ for(const [kind,options] of Object.entries(CONTROL_OPTIONS)){
+  const part=kind==='throttle'?'engine':'clutch',installed=condition.parts[part].sku.endsWith(':upgraded');
+  const row=document.createElement('div');row.className='service-row';
+  const label=document.createElement('label');label.textContent=kind==='throttle'?'Throttle response':'Clutch bite point';
+  const select=document.createElement('select');select.setAttribute('aria-label',label.textContent);
+  for(const value of options){const option=document.createElement('option');option.value=value;option.textContent=value;select.append(option);}
+  select.value=condition.controlTune?.[kind]??(kind==='throttle'?'smooth':'standard');
+  select.disabled=!nearShop||!installed;
+  const detail=document.createElement('small');detail.textContent=installed?(kind==='throttle'?'Upgrade installed · faster buildup and less resistance':'Upgrade installed · faster buildup, gentler release'):`Buy the ${part} upgrade to unlock tuning`;
+  label.append(detail);select.onchange=()=>{try{career=configurePedals(career,kind,select.value);persistCareer();renderShop();updateCareerHud();notify('Pedal tuning saved for this car');}catch(error){notify(error.message);}};
+  row.append(label,select);content.append(row);
+ }
 }
 $('job-button').onclick=handleJobButton;
 $('race-button').onclick=startDragRace;
@@ -528,7 +553,7 @@ $('rival-accept').onclick=()=>{if(raceActive())return;life.rival=acceptRival(lif
 $('rival-decline').onclick=()=>{life.rival=declineRival(life.rival);if(navigationKind==='rival')navigationKind=null;updateRaceHud();updateCareerHud();notify('Challenge declined · no penalty');};
 $('garage-button').onclick=()=>{keys.clear();renderShop();$('shop-dialog').showModal();};
 $('appearance-select').onchange=()=>{const choice=$('appearance-select').value;if(!APPEARANCES[choice]||saveRecovered)return;career=setVehicleAppearance(career,choice);persistCareer();makeCar(selected);notify('Appearance changed · driving setup preserved');};
-$('garage-reset-button').onclick=()=>{career=setVehicleCondition(career,createVehicleCondition(selected));persistCareer();reset();updateCareerHud();notify('Full car reset · ready to drive');};
+$('garage-reset-button').onclick=()=>{career=setVehicleCondition(career,resetVehicleCondition(activeVehicle(career)));persistCareer();reset();updateCareerHud();notify('Full car reset · upgrades kept');};
 $('map-button').onclick=()=>{keys.clear();editor.open();};
 $('fuel-button').onclick=()=>{if(!nearLocation('fuel')){notify('Stop at the gas station first');return;}try{career=purchaseFuel(career,`fuel:${crypto.randomUUID()}`);persistCareer();updateCareerHud();notify('Tank filled');}catch(error){notify(error.message);}};
 const phoneViews=[...document.querySelectorAll('[data-phone-view]')];
@@ -787,7 +812,7 @@ function readInput(dt){
    try{storage.setItem('dsl-clutch-mode',controllerClutch.mode);}catch{}
    notify(`Clutch · ${controllerClutch.mode==='pressure'?'pressure build':'direct trigger'}`);
   }
-  controllerClutch=readClutchInput(controllerClutch,pad.buttons[6]?.value||0,dt);
+  controllerClutch=readClutchInput(controllerClutch,pad.buttons[6]?.value||0,dt,tunedCarFor(activeVehicle(career)).pedals.clutch);
   const clutch=controllerClutch.value;
   processController(pad,clutch);
   const b=i=>pad.buttons[i]?.pressed||false,axis=i=>Math.abs(pad.axes[i]||0)<.08?0:pad.axes[i];
@@ -799,8 +824,9 @@ function readInput(dt){
   return {steer:(touchHeld.has('right')?1:0)-(touchHeld.has('left')?1:0),throttle:touchHeld.has('gas')?1:0,clutch:Number(touchClutch.value)/100,brake:touchHeld.has('brake')?1:0,handbrake:false};
  }
  const clutchTarget=pressed('ControlLeft','ControlRight')?1:0;
- clutchKey=advanceKeyboardClutch(clutchKey,Boolean(clutchTarget),dt);
- throttleKey=advanceKeyboardThrottle(throttleKey,pressed('Space'),pressed('KeyV'),dt);
+ const pedals=tunedCarFor(activeVehicle(career)).pedals;
+ clutchKey=advanceKeyboardClutch(clutchKey,Boolean(clutchTarget),dt,pedals.clutch);
+ throttleKey=advanceKeyboardThrottle(throttleKey,pressed('Space'),pressed('KeyV'),dt,pedals.throttle);
  return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:0,handbrake:pressed('KeyH')};
 }
 function updateHud(dt){
@@ -1038,12 +1064,12 @@ function frame(now){
   }
   const cameraViolation=updateSpeedCameras(speedCameras,state,dt,activeCityEffects.cameras&&!intro&&!sandboxMode&&!profileEnabled&&!raceActive());
   if(cameraViolation&&!saveRecovered){cameraViolation.id=cameraSession+':'+cameraViolation.id;career=applyFine(career,cameraViolation);latestCitation={violation:cameraViolation,at:now};persistCareer();updateCareerHud();notify('Speed camera · $45 fine');}
-  clutchWearWorkJ+=clutchFrictionWork(selected,activeVehicle(career).parts.clutch.health,{dtSeconds:dt,clutchPosition:state.clutch,clutchReleasing:state.clutch<lastClutch,gear:state.gear,slipRadPerSecond:state.slip,clutchSlipping:state.clutchSlipping,throttle:state.throttle,engineRpm:state.rpm,running:state.running});
+  clutchWearWorkJ+=clutchFrictionWork(selected,activeVehicle(career).parts.clutch.health,{dtSeconds:dt,clutchBitePoint:tunedCar.clutchBitePoint,clutchPosition:state.clutch,clutchReleasing:state.clutch<lastClutch,gear:state.gear,slipRadPerSecond:state.slip,clutchSlipping:state.clutchSlipping,throttle:state.throttle,engineRpm:state.rpm,running:state.running});
   wearClock+=dt;saveClock+=dt;mapClock+=dt;
  if(wearClock>=RUNTIME.wearIntervalSeconds){if(!sandboxMode&&!playingIntro())career=setVehicleCondition(career,applyDrivingWear(activeVehicle(career),{dtSeconds:wearClock,speedMps:Math.abs(state.speed),clutchPosition:state.clutch,clutchWorkJ:clutchWearWorkJ,throttle:state.throttle,brake:state.brake,engineRpm:state.rpm,running:state.running,elapsedGameDays:wearClock/600}));wearClock=0;clutchWearWorkJ=0;}
   if(activeVehicle(career).fuelLiters<=0){state.running=false;state.rpm=0;state.boost=0;if(!emptyTankReported){notify('Out of fuel · open Fuel at the gas station');emptyTankReported=true;}}else emptyTankReported=false;
   if(saveClock>=RUNTIME.saveIntervalSeconds){persistCareer();persistCityTime();saveClock=0;}
-  if(mapClock>=RUNTIME.phoneIntervalSeconds){updateCareerHud();if(!phoneView.compact&&!document.querySelector('[data-phone-view="maps"]').hidden)drawMiniMap();mapClock=0;}
+  if(mapClock>=RUNTIME.phoneIntervalSeconds){updateCareerHud();if(phoneView.compact)drawMiniMap($('watch-map'));else if(!document.querySelector('[data-phone-view="maps"]').hidden)drawMiniMap();mapClock=0;}
  }
  if(state.blown&&!lastBlown)beginEngineFailure(now);
  if(!intro&&failureStart&&now-failureStart>(reducedMotion.matches?900:2400)&&$('engine-failure').hidden){$('engine-failure').hidden=false;$('reset-blown').focus();}

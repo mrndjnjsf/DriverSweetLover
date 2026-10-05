@@ -6,7 +6,7 @@ test('Space builds slower near full pressure and still reaches full throttle', (
   const lowGain=advance(0,true,false,.2);
   const highGain=advance(.8,true,false,.2)-.8;
   assert.ok(lowGain>highGain*2);
-  assert.equal(advance(0, true, false, 2), 1);
+  assert.equal(advance(0, true, false, 2.1), 1);
   let value = 0;
   for (let i = 0; i < 60; i++) value = advance(value, true, false, 1 / 120);
   assert.ok(Math.abs(value - advance(0, true, false, .5)) < 1e-10);
@@ -30,5 +30,5 @@ test('release takes twice as long to retrace the pressure buildup curve',()=>{
   let released=1;
   for(let i=0;i<120;i++)released=advance(released,false,false,1/120);
   assert.ok(Math.abs(released-advance(1,false,false,1))<1e-10);
-  assert.equal(advance(1,false,false,3),0);
+  assert.equal(advance(1,false,false,4.2),0);
 });

@@ -1,5 +1,6 @@
 // Shared drivetrain/handling tuning. Keep physics step size in gameplay.js.
 export const DRIVING = Object.freeze({
+  rpmRiseMultiplier: .75,
   wheelRadiusMeters: .315,
   initialIdleRpm: 850,
   idleGovernorRpm: 920,
