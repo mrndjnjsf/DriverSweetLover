@@ -28,6 +28,7 @@ import { NEEDS } from './config/life.js';
 import { purchaseBathroom } from './career.js';
 import { createParkingView } from './presentation/parking-view.js';
 import { resolveParkedContact } from './parked-contact.js';
+import { resolveBuildingContact } from './building-contact.js';
 import { WORLD, CAMERA, RUNTIME, SHIFTER } from "./config/gameplay.js";
 import { createDrivingHud } from "./driving-hud.js";
 import { drivingAdvice } from './driving-coach.js';
@@ -978,6 +979,17 @@ function handleParkedContact(previous,now){
  state.x=previous.x;state.z=previous.z;state.heading=previous.heading;state.speed=0;
  return contact.impact;
 }
+let lastBuildingHit={id:null,at:0};
+function handleBuildingContact(previous,now){
+ world.update(previous.x,previous.z);
+ const contact=resolveBuildingContact(previous,state,world.buildingColliders);
+ if(!contact)return null;
+ if(contact.impactSpeedMps>=2&&!sandboxMode&&!profileEnabled&&(contact.buildingId!==lastBuildingHit.id||now-lastBuildingHit.at>1500)){
+  lastBuildingHit={id:contact.buildingId,at:now};applyContact(contact,now,'Building collision');
+ }
+ state.x=contact.pose.x;state.z=contact.pose.z;state.heading=contact.pose.heading;state.speed=0;
+ return contact;
+}
 function handleTrafficImpact(vehicles,now){
  const eligible=vehicles.filter(vehicle=>now-(lastTrafficHits.get(vehicle.id)??-Infinity)>2200);
  const impact=findTrafficImpact(state,eligible);
@@ -1042,7 +1054,7 @@ function frame(now){
  if(profileSpeed!==null&&Number.isFinite(profileSpeed)){
   state.speed=profileSpeed;state.x=map.roadWidth*.25;state.z-=profileSpeed*dt;
   state.rpm=4400;state.gear=3;state.clutch=0;state.throttle=.7;state.running=true;
- }else for(let n=0;n<steps;n++){const subPose={x:state.x,z:state.z,heading:state.heading,speed:state.speed};step(state,simInput,tunedCar,dt/steps);parkedImpact=handleParkedContact(subPose,now)||parkedImpact;}
+ }else for(let n=0;n<steps;n++){const subPose={x:state.x,z:state.z,heading:state.heading,speed:state.speed};step(state,simInput,tunedCar,dt/steps);parkedImpact=handleBuildingContact(subPose,now)||handleParkedContact(subPose,now)||parkedImpact;}
  if(!paused){
   if(life.needs.poop>=NEEDS.warning&&!needWarningShown){notify('Bathroom needed soon · open Bathrooms');needWarningShown=true;}
   updateIntro(dt,now);

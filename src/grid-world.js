@@ -48,6 +48,7 @@ export function createGridWorld(scene, THREE, initialMap, { radius = 4 } = {}) {
  const centerLines = pool(count * 2, yellow);
  const laneMarks = pool(count * 24, white);
  const buildings = pool(count * 4, buildingsMaterial);
+ const buildingColliders = [];
  const meshes = [intersections, eastRoads, southRoads, blocks, curbEdges, centerLines, laneMarks, buildings];
  const used = new Map(meshes.map(mesh => [mesh, 0]));
  const marker = new THREE.Object3D();
@@ -69,6 +70,7 @@ export function createGridWorld(scene, THREE, initialMap, { radius = 4 } = {}) {
  group.add(ground);
  let currentKey = '';
  function rebuild(centerCol, centerRow) {
+  buildingColliders.length = 0;
   for (const mesh of meshes) used.set(mesh, 0);
   const width = map.roadWidth, length = map.blockSize, gap = length - width;
   const firstCol = Math.max(0, centerCol - radius), lastCol = Math.min(map.size - 1, centerCol + radius);
@@ -106,6 +108,7 @@ export function createGridWorld(scene, THREE, initialMap, { radius = 4 } = {}) {
     if(parkingReservedAt(parkingSites,bx,bz,footprint/2))continue;
     if(Math.abs(project.x-bx)<11+footprint/2&&Math.abs(project.z-bz)<11+footprint/2)continue;
     add(buildings, bx, height / 2 + .2, bz, footprint, height, footprint, palette[id % palette.length]);
+    buildingColliders.push({id:`building:${col}:${row}:${slot}`,x:bx,z:bz,heading:0,halfLength:footprint/2,halfWidth:footprint/2});
    }
   }
   for (const mesh of meshes) {
@@ -119,6 +122,7 @@ export function createGridWorld(scene, THREE, initialMap, { radius = 4 } = {}) {
  }
  return {
   group,
+  buildingColliders,
   update(x, z) {
    const { col, row } = nearestRoadPoint(map, x, z);
    const key = `${col}:${row}`;
