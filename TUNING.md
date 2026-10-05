@@ -76,4 +76,4 @@ X increases the selected keyboard throttle; Space reduces it at 2.5 pressure uni
 
 Space held after throttle empties waits keyboardBrakeDelaySeconds (2), then ramps at keyboardBrakeRampPerSecond (.35) to keyboardGentleBrake (.35). Releasing Space or building with X resets the brake timer and releases gentle braking. Alt/S retains immediate full braking. Input resets also clear this timer.
 
-C instantly sets keyboard throttle pressure to 100% and clears the coast/brake timers. After releasing C the normal 1-percentage-point-per-second drift resumes. Space reduction takes priority over C when both are held.
+C instantly sets keyboard throttle pressure to 100% and clears the coast/brake timers. After releasing C, pressure drains at the Space reduction rate (2.5 units/second: full to zero in 0.4 seconds). This automatic release does not trigger braking. X takes over gradual pressure control and returns release to the slow 1-percentage-point-per-second drift. Space reduction takes priority over C when both are held.
