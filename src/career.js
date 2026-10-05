@@ -11,6 +11,8 @@ import { createFleet, validateFleet, activeVehicle, assignedDriver, dealershipOp
 import { DEALERSHIP, DRIVERS, FLEET } from './config/fleet.js';
 import { APPEARANCES } from './config/appearance.js';
 import { CONTROL_OPTIONS } from './control-tuning.js';
+import { resetVehicleCondition } from './condition.js';
+import { resetAccess, resetsRemaining, matchesGraffiti, validateResetAccess } from './reset-access.js';
 
 // Browser-local career data. Money is always integer US cents.
 export const SAVE_VERSION = 2;
@@ -78,6 +80,7 @@ export function createCareer(activeVehicleId = 'eclipse') {
     vehicles: { [activeVehicleId]:createVehicleCondition(activeVehicleId) },
     vehicleMeta:{[activeVehicleId]:{id:activeVehicleId,modelId:activeVehicleId,appearance:'original'}},
     fleet:createFleet(),
+    resetAccess: { used: 0, unlocked: false },
     walletCents: STARTING_WALLET_CENTS,
     transactions: [],
     jobs: { active: null, completedIds: [], cancelledIds: [] },
@@ -104,6 +107,7 @@ function validateActiveJob(active) {
 
 export function validateCareer(career) {
   if (!career || career.schemaVersion !== SAVE_VERSION) throw new TypeError('Unsupported career save version');
+  validateResetAccess(career.resetAccess);
   requireId(career.activeVehicleId,'Owned vehicle ID');
   if (!career.vehicles) throw new TypeError('Missing vehicles');
   for (const vehicleId of Object.keys(career.vehicles)) {
@@ -193,6 +197,7 @@ function copyCareer(career) {
   validateCareer(career);
   return {
     ...career,
+    resetAccess: { ...resetAccess(career) },
     vehicles: Object.fromEntries(Object.keys(career.vehicles).map(id => [id, {
       ...career.vehicles[id],
       parts: Object.fromEntries(Object.entries(career.vehicles[id].parts).map(([key, part]) => [key, { ...part }])),
@@ -207,6 +212,21 @@ function copyCareer(career) {
       cancelledIds: [...career.jobs.cancelledIds],
     },
   };
+}
+
+export function fullCarReset(career) {
+  const next = copyCareer(career);
+  if (resetsRemaining(next) === 0) throw new Error('Full resets locked · enter the graffiti password in Garage');
+  next.vehicles[next.activeVehicleId] = resetVehicleCondition(activeVehicle(next));
+  if (!next.resetAccess.unlocked) next.resetAccess.used++;
+  return next;
+}
+
+export function unlockFullResets(career, password) {
+  const next = copyCareer(career);
+  if (!matchesGraffiti(password)) throw new Error('That is not the graffiti password');
+  next.resetAccess.unlocked = true;
+  return next;
 }
 
 export function switchVehicle(career, vehicleId) {

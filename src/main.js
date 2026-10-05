@@ -4,7 +4,9 @@ import { createNavigationRouter } from './navigation.js';
 const navigate=createNavigationRouter();
 let navigationPoints=[];
 import { configurePedals } from './career.js';
-import { resetVehicleCondition } from './condition.js';
+import { fullCarReset, unlockFullResets } from './career.js';
+import { resetsRemaining, donationUrl } from './reset-access.js';
+import { createGraffitiView } from './presentation/graffiti-view.js';
 import { createActivityMarket, advanceActivityMarket, consumeActivityOffer, activitySummary } from './activity-market.js';
 import { activeVehicle, driverAvailable } from './fleet.js';
 import { FLEET } from './config/fleet.js';
@@ -184,6 +186,7 @@ const fleetPhoneView=createFleetPhoneView(document,{
 function commitFleet(command){if(saveRecovered||raceActive()){notify('Finish the race or recover the save first');return false;}try{career=command(career);persistCareer();updateCareerHud();notify('Garage / driver updated');return true;}catch(error){notify(error.message);updateCareerHud();return false;}}
 let activeCityEffects=cityEffects(career),cityLedgerLength=-1,cameraSession=crypto.randomUUID(),speedCameras=createSpeedCameras(map);
 const cityProjectView=createCityProjectView(THREE,scene);
+const graffitiView=createGraffitiView(THREE,scene);
 const renderCityPhone=createCityPhoneView(document,(id,amount)=>{
  if(saveRecovered)return;
  try{const before=cityEffects(career);career=donateToCity(career,id,amount,'donation:'+crypto.randomUUID());persistCareer();updateCareerHud();drawMiniMap();const after=cityEffects(career);notify(before.park!==after.park?'Community park opened · visit the city marker':before.improvedRoads!==after.improvedRoads?'Streets renewed · fewer debris hazards':before.cameras!==after.cameras?'City upgraded · speed cameras now active':'Donation received · thank you');}catch(error){notify(error.message);}
@@ -313,7 +316,7 @@ function updateCareerHud(){
  }
  fleetPhoneView.render(career,{atGarage:nearLocation('garage'),recovered:saveRecovered,raceActive:raceActive()});
  if(cityLedgerLength!==career.transactions.length){activeCityEffects=cityEffects(career);cityLedgerLength=career.transactions.length;}
- cityProjectView.set(map,activeCityEffects);world.setCityEffects(activeCityEffects);
+ cityProjectView.set(map,activeCityEffects);graffitiView.set(map);world.setCityEffects(activeCityEffects);
  renderCityPhone(cityProjects(career).map(project=>({...project,unaffordable:saveRecovered||career.walletCents<Math.min(2500,project.targetCents-project.fundedCents)})));
  updateLifeHud();
  $('wallet').textContent=money(career.walletCents);
@@ -350,6 +353,11 @@ function updateCareerHud(){
  const power=Math.round(performanceModifiers(activeVehicle(career)).enginePower*100);
  $('condition-summary').textContent=`Engine ${Math.round(condition.health.engine*100)}% · Power ${power}% · Oil ${Math.round(condition.oilCondition*100)}% · Clutch ${Math.round(condition.health.clutch*100)}% · Bite ${Math.round(condition.clutchBitePoint*100)}% · Brakes ${Math.round(condition.health.brakePads*100)}% · Bumpers F${Math.round(condition.health.frontBumper*100)} / R${Math.round(condition.health.rearBumper*100)}%`;
  $('garage-condition').textContent=`${cars[selected].name} · engine ${Math.round(condition.health.engine*100)}% · clutch ${Math.round(condition.health.clutch*100)}% · bite ${Math.round(condition.clutchBitePoint*100)}% · fuel ${fuelPercent}%`;
+ const remaining=resetsRemaining(career);
+ $('garage-reset-button').textContent=remaining===Infinity?'FULL CAR RESET · UNLOCKED':remaining>0?`FULL CAR RESET · ${remaining} LEFT`:'FULL CAR RESET · LOCKED';
+ $('garage-reset-button').disabled=remaining===0||Boolean(intro)||saveRecovered||raceActive();
+ $('reset-allowance').textContent=remaining===Infinity?'Unlimited full resets unlocked.':`${remaining} of 3 starter resets remaining.`;
+ $('reset-unlock').hidden=remaining===Infinity;
  $('condition-summary').classList.toggle('critical',condition.health.engine<.5);
  const nearbyEvent=roadEvents.filter(event=>event.caution).map(event=>({event,distance:Math.hypot(event.x-state.x,event.z-state.z)})).sort((a,b)=>a.distance-b.distance)[0];
  const eventNames={'stalled-car':'Stalled car','construction':'Roadwork','debris':'Debris','dog':'Dog near road','children':'Children near road'};
@@ -553,7 +561,16 @@ $('rival-accept').onclick=()=>{if(raceActive())return;life.rival=acceptRival(lif
 $('rival-decline').onclick=()=>{life.rival=declineRival(life.rival);if(navigationKind==='rival')navigationKind=null;updateRaceHud();updateCareerHud();notify('Challenge declined · no penalty');};
 $('garage-button').onclick=()=>{keys.clear();renderShop();$('shop-dialog').showModal();};
 $('appearance-select').onchange=()=>{const choice=$('appearance-select').value;if(!APPEARANCES[choice]||saveRecovered)return;career=setVehicleAppearance(career,choice);persistCareer();makeCar(selected);notify('Appearance changed · driving setup preserved');};
-$('garage-reset-button').onclick=()=>{career=setVehicleCondition(career,resetVehicleCondition(activeVehicle(career)));persistCareer();reset();updateCareerHud();notify('Full car reset · upgrades kept');};
+$('garage-reset-button').onclick=()=>{
+ if(intro||saveRecovered||raceActive()){notify('Finish the current drive or recover your save first');return;}
+ try{career=fullCarReset(career);persistCareer();resetDrivingState();updateRaceHud();updateCareerHud();notify('Full car reset · upgrades kept');}catch(error){notify(error.message);}
+};
+$('reset-unlock-button').onclick=()=>{
+ if(intro||saveRecovered)return;
+ try{career=unlockFullResets(career,$('reset-password').value);persistCareer();$('reset-password').value='';$('reset-unlock-status').textContent='Unlimited full resets unlocked. Thank you for supporting CarPG!';updateCareerHud();}catch(error){$('reset-unlock-status').textContent=error.message;}
+};
+const supportUrl=donationUrl();
+if(supportUrl){$('support-donation').href=supportUrl;$('support-donation').hidden=false;$('support-pending').hidden=true;}
 $('map-button').onclick=()=>{keys.clear();editor.open();};
 $('fuel-button').onclick=()=>{if(!nearLocation('fuel')){notify('Stop at the gas station first');return;}try{career=purchaseFuel(career,`fuel:${crypto.randomUUID()}`);persistCareer();updateCareerHud();notify('Tank filled');}catch(error){notify(error.message);}};
 const phoneViews=[...document.querySelectorAll('[data-phone-view]')];
@@ -698,7 +715,7 @@ function throwShifter(direction,clutch){
  neutralX=next.lane;
  neutralHoldUntil=wasInGear&&next.row===0?performance.now()+SHIFTER.gearExitHoldMs:0;
 }
-function startEngine(){if(activeVehicle(career).fuelLiters<=0){notify('Out of fuel · visit the gas station or use free full reset');return;}notify(start(state,tunedCarFor(activeVehicle(career)))?'Engine started':state.blown?'Engine destroyed · reset the car':'Press the clutch or select neutral');}
+function startEngine(){if(activeVehicle(career).fuelLiters<=0){notify('Out of fuel · visit the gas station or check full resets in Garage');return;}notify(start(state,tunedCarFor(activeVehicle(career)))?'Engine started':state.blown?'Engine destroyed · reset the car':'Press the clutch or select neutral');}
 function toggleReverse(clutch){
  if(cars[selected].transmission==='automatic'){
   const range=state.autoRange==='R'?'D':'R',error=selectAutomaticRange(state,range);

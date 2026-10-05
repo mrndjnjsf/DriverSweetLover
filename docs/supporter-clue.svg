@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="440" viewBox="0 0 800 440">
+ <rect width="800" height="440" fill="#17232b"/>
+ <text x="40" y="55" fill="#e9f0e9" font-family="sans-serif" font-size="28">CarPG · Find the wall</text>
+ <g stroke="#536a78" stroke-width="16">
+  <path d="M100 110V330M250 110V330M400 110V330M550 110V330M700 110V330M60 160H740M60 280H740"/>
+ </g>
+ <path d="M550 280H100" fill="none" stroke="#e6be68" stroke-width="7"/>
+ <path d="M125 263L100 280L125 297" fill="none" stroke="#e6be68" stroke-width="7"/>
+ <circle cx="550" cy="280" r="13" fill="#e9f0e9"/>
+ <rect x="80" y="246" width="40" height="12" fill="#b9ee6e"/>
+ <g fill="#e9f0e9" font-family="sans-serif" font-size="19">
+  <text x="560" y="317">Central intersection</text>
+  <text x="45" y="222">Graffiti wall</text>
+  <text x="40" y="380">Three blocks west. North sidewalk. Read the paint.</text>
+  <text x="40" y="412">Enter the letters and number in your phone's Garage app.</text>
+  <text x="720" y="100">N ↑</text>
+ </g>
+</svg>
