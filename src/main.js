@@ -1,4 +1,5 @@
 import { APPEARANCES } from './config/appearance.js';
+import { createActivityMarket, advanceActivityMarket, consumeActivityOffer, activitySummary } from './activity-market.js';
 import { activeVehicle, driverAvailable } from './fleet.js';
 import { FLEET } from './config/fleet.js';
 import { createFleetPhoneView } from './fleet-phone-view.js';
@@ -155,9 +156,10 @@ const cityTimeKey='dsl-city-time-v1';
 let cityElapsed=0;
 try{const saved=Number(storage.getItem(cityTimeKey));if(Number.isFinite(saved)&&saved>=0&&saved<60*24*365)cityElapsed=saved;}catch{}
 if(profileEnabled&&profileParams.has('night'))cityElapsed=advanceToHour(0,20);
+const activityMarket=createActivityMarket(cityHour(cityElapsed));
 let lastTimeLabel='';
 function persistCityTime(){try{storage.setItem(cityTimeKey,String(cityElapsed));}catch{}}
-function jumpDayNight(){if(dragRace?.phase==='countdown'||dragRace?.phase==='active'){notify('Finish the race before changing city time');return;}cityElapsed=advanceToHour(cityElapsed,daylightAt(cityHour(cityElapsed))>.3?20:9);persistCityTime();notify(`City time · ${formatCityTime(cityHour(cityElapsed))}`);}
+function jumpDayNight(){if(dragRace?.phase==='countdown'||dragRace?.phase==='active'){notify('Finish the race before changing city time');return;}cityElapsed=advanceToHour(cityElapsed,daylightAt(cityHour(cityElapsed))>.3?20:9);advanceActivityMarket(activityMarket,0,cityHour(cityElapsed));persistCityTime();updateCareerHud();updateRaceHud();notify(`City time · ${formatCityTime(cityHour(cityElapsed))}`);}
 $('time-button').onclick=jumpDayNight;
 const loadedCareer=loadCareer(storage);
 let career=loadedCareer.career,saveRecovered=loadedCareer.recovered;
@@ -353,7 +355,7 @@ function updateCareerHud(){
  if(sandboxMode){$('job-status').textContent='Healthy-car practice · no saves, wear, fines, or earnings';$('job-button').disabled=true;destinationMarker.visible=false;return;}
  if(saveRecovered){$('job-status').textContent='Saved career could not be read. Open Garage to recover.';$('job-button').disabled=true;destinationMarker.visible=false;return;}
  $('job-button').disabled=false;
- if(!job){$('job-status').textContent='Pick a delivery to start earning.';$('job-button').textContent='FIND DELIVERY';}
+ if(!job){$('job-status').textContent=activitySummary(activityMarket,'delivery',cityHour(cityElapsed));$('job-button').textContent='FIND DELIVERY';$('job-button').disabled=activityMarket.delivery.available===0;}
  else{
   const target=job.status==='accepted'?'pickup':'drop-off',id=currentDestination(),point=job.status==='accepted'?(pickupParking()||nodePoint(id)):nodePoint(id);
   $('job-status').textContent=`${target.toUpperCase()} · ${Math.round(Math.hypot(state.x-point.x,state.z-point.z))} m away · $${money(job.payoutCents)}`;
@@ -364,6 +366,7 @@ function updateCareerHud(){
  if(target!==null){const point=career.jobs.active?.status==='accepted'?(pickupParking()||nodePoint(target)):nodePoint(target);destinationMarker.position.set(point.x,4,point.z);destinationMarker.rotation.z=performance.now()*.001;}
 }
 function raceIsNight(){return daylightAt(cityHour(cityElapsed))<.15;}
+function raceAvailable(){return sandboxMode||life.rival.phase==='accepted'||activityMarket.race.available>0;}
 function raceActive(){return dragRace?.phase==='countdown'||dragRace?.phase==='active';}
 function raceDistance(){return dragCourse?Math.hypot(state.x-dragCourse.start.x,state.z-dragCourse.start.z):Infinity;}
 function raceProgress(){return dragCourse?Math.max(0,Math.min(dragCourse.distanceMeters,
@@ -397,20 +400,23 @@ function updateRaceHud(){
   status.textContent=result?.outcome==='win'?`WIN · ${result.elapsedSeconds.toFixed(2)} s${sandboxMode?' · practice':` · +$${money(DRAG_WIN_PAYOUT_CENTS)}`}`
    :result?.outcome==='loss'?`${dragOpponent==='black'?'Black car':'Ghost'} won · ${result.elapsedSeconds.toFixed(2)} s`
    :result?.outcome==='false-start'?'False start · no payout':'Race timed out · no payout';
-  button.textContent='RACE AGAIN';button.disabled=!raceIsNight()||distance>12||saveRecovered;return;
+  status.textContent+=` · ${activitySummary(activityMarket,'race',cityHour(cityElapsed))}`;
+  button.textContent='RACE AGAIN';button.disabled=!raceAvailable()||distance>12||saveRecovered||state.blown;return;
  }
  status.textContent=state.blown?'Repair or reset the engine before racing'
-  :!raceIsNight()?'Race opens at night · press N to jump ahead'
+  :!raceAvailable()?activitySummary(activityMarket,'race',cityHour(cityElapsed))
   :distance>12?`Start line ${distance} m away · purple map marker`
   :`Stop on stripe · beat ${(life.rival.phase==='accepted'?RIVAL.seconds[selected]:dragRace.rivalTimeSeconds).toFixed(1)} s${sandboxMode?' in practice':` for $${money(DRAG_WIN_PAYOUT_CENTS)}`}`;
- button.textContent='STAGE RACE';button.disabled=!raceIsNight()||distance>12||saveRecovered||state.blown;
+ if(raceAvailable()&&!state.blown)status.textContent+=` · ${activitySummary(activityMarket,'race',cityHour(cityElapsed))}`;
+ button.textContent='STAGE RACE';button.disabled=!raceAvailable()||distance>12||saveRecovered||state.blown;
 }
 function startDragRace(){
  if(intro)return;
- if(!dragCourse||!raceIsNight()||saveRecovered||state.blown){updateRaceHud();return;}
+ if(!dragCourse||!raceAvailable()||saveRecovered||state.blown){updateRaceHud();return;}
  const candidate=life.rival.phase==='accepted'?createDragRace(dragCourse,{rivalTimeSeconds:RIVAL.seconds[selected]}):dragRace?.phase==='finished'?createDragRace(dragCourse,{rivalTimeSeconds:rivalTimeForCar(selected)}):dragRace;
  const staged=stageRace(candidate,state);
  if(!staged.staged){notify({line:'Get within 1 m of the start stripe',moving:'Stop fully before staging',alignment:'Face the finish line', 'not-ready':'Finish or reset this race first'}[staged.reason]||'Race unavailable');updateRaceHud();return;}
+ if(!sandboxMode&&life.rival.phase!=='accepted')consumeActivityOffer(activityMarket,'race');
  dragRace=staged.race;
  dragOpponent=life.rival.phase==='accepted'?'black':'ghost';
  dragRaceId=crypto.randomUUID();
@@ -436,7 +442,7 @@ function handleJobButton(){
  if(sandboxMode)return;
  try{
   const job=career.jobs.active;
-  if(!job){navigationKind=null;career=acceptDelivery(career,nextDeliveryOffer());notify('Delivery accepted · follow the gold marker');}
+  if(!job){if(!activityMarket.delivery.available){notify('No delivery requests yet · check the app countdown');return;}career=acceptDelivery(career,nextDeliveryOffer());consumeActivityOffer(activityMarket,'delivery');navigationKind=null;notify('Delivery accepted · follow the gold marker');}
   else if(job.status==='accepted'&&pickupParking()&&(!life.parking.get(pickupParking().id)?.ready||parkingCondition(state,pickupParking().bay))){notify('Park fully inside the gold pickup bay and hold still');return;}
   else if(job.status==='accepted'&&!pickupParking()&&!atNode(job.pickupNodeId)){notify('Reach the pickup marker and stop');return;}
   else if(job.status!=='accepted'&&!atNode(currentDestination())){notify('Reach the marker and slow down to stop');return;}
@@ -470,7 +476,7 @@ function drawMiniMap(){
  }
  const target=currentDestination();
  if(target!==null){const x=cx+(target%50-near.col)*unit,y=cy+(Math.floor(target/50)-near.row)*unit;ctx.fillStyle='#e8a62e';ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();}
- if(dragCourse&&raceIsNight())for(const point of [dragCourse.start,dragCourse.finish]){
+ if(dragCourse)for(const point of [dragCourse.start,dragCourse.finish]){
   const x=cx+(point.x-near.x)/map.blockSize*unit,y=cy-(point.z-near.z)/map.blockSize*unit;
   if(x<2||x>canvas.width-2||y<2||y>canvas.height-2)continue;
   ctx.fillStyle='#8f64bf';ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();
@@ -979,6 +985,7 @@ function frame(now){
   if(life.needs.poop>=NEEDS.warning&&!needWarningShown){notify('Bathroom needed soon · open Bathrooms');needWarningShown=true;}
   updateIntro(dt,now);
   if(!raceActive())cityElapsed+=dt;
+  if(!intro)advanceActivityMarket(activityMarket,dt,cityHour(cityElapsed));
   const previousRivalPhase=life.rival.phase;
   const forceRival=sandboxMode&&profileParams.has('rival')&&!rivalPreviewUsed;
   if(!intro)advanceLifeSession(life,dt,{map,sites:parkingSites,car:state,eligible:(raceIsNight()||forceRival)&&!career.fleet.drivers.kai.vehicleId&&!career.jobs.active&&!raceActive()&&!state.blown&&Boolean(dragCourse)&&Math.abs(state.speed)<8,force:forceRival});

@@ -2,7 +2,7 @@
 // translucent rival ghost. Race positions and timing come from drag-race.js.
 export function createDragRaceView(scene, THREE) {
   const group = new THREE.Group();
-  group.name = 'Night drag course';
+  group.name = 'Drag course';
   scene.add(group);
   const geometries = [];
   const materials = [];
@@ -50,7 +50,7 @@ export function createDragRaceView(scene, THREE) {
   return {
     group,
     update(course, race, darkness, playerX, playerZ) {
-      group.visible = Boolean(course && darkness > .7);
+      group.visible = Boolean(course);
       if (!group.visible) return;
       const heading = course.start.heading;
       start.position.set(course.start.x, 0, course.start.z);
