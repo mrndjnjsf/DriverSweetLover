@@ -19,7 +19,7 @@ The game uses the browser Gamepad API for a standard Xbox controller. Controller
 | Action | Xbox controller | Keyboard and mouse |
 | --- | --- | --- |
 | Steer and turn | Left stick | A / D |
-| Gas / brake | RT / LB | X increases gas, C full gas, Space decreases gas, then gently brakes after 2 seconds empty / Alt or S slams brakes |
+| Gas / brake | Light RT builds, full RT slams; RB releases then brakes; LB full brake | X increases gas, C full gas, Space decreases gas, then gently brakes after 2 seconds empty / Alt or S slams brakes |
 | Clutch | LT | Hold Ctrl to build pressure; release to let it out |
 | Manual H-pattern | Right stick | Hold Ctrl, then move the mouse through the gate |
 | Reverse at a stop | B, with clutch pressed | B, with clutch pressed |
@@ -27,7 +27,7 @@ The game uses the browser Gamepad API for a standard Xbox controller. Controller
 | Handbrake | A | H |
 | Camera | D-pad | 1–4 |
 | Jump between day and night | Time button | N or time button |
-| Stage a drag race | RB at the start stripe | T or Stage Race button |
+| Stage a drag race | Messages app at the start stripe | T or Stage Race button |
 
 The right-stick pattern keeps its brief Neutral detents. For keyboard driving, hold Ctrl to build clutch pressure at 1.5 per second; releasing it lets pressure fall at 0.8 per second. Once clutch depression exceeds a 2% input deadzone, the mouse can move the virtual shift knob. The browser locks and hides the mouse while the clutch is held. If the first lock request needs a click, hold Ctrl and use the Lock Mouse prompt. If the browser blocks pointer lock, the cursor stays visible and edge assistance keeps the virtual shifter moving at a window boundary. Move left then up from center Neutral for 1st; move down to Neutral, right to the center lane, then up for 3rd. The mouse throw is longer and crossing center Neutral catches briefly. A quick sweep stops at center; keep moving sideways after the catch to reach the far lane. You can throw up or down into a gear from any lane with any deliberate clutch press. Release Ctrl to engage the clutch and release the mouse. The shifter display follows your mouse while held.
 
@@ -67,7 +67,7 @@ The streets have a bounded set of moving cars, working red/green intersections, 
 
 Stalled cars, roadwork, and debris appear as avoidable hard obstacles. Dogs and children appear near the road as caution cues but cannot be struck or damaged. Encounters recycle around the player and avoid the spawn and service markers. Parked police observe nearby speeding over the 35 mph limit, red-light crossings, and collisions. A citation shows its reason and amount, and charges the in-game wallet once, up to its available balance. This is a first playable pass: traffic does not yet avoid all road events or react intelligently to every player maneuver, and police do not pursue the player.
 
-The purple marker leads to a 400 m drag start near the spawn. Stop on its stripe facing the finish and press RB, T, or **Stage Race**. The three-count allows clutch and throttle setup; crossing early is a false start. Beat the violet ghost over the line to win $150. The ghost has no collision body, and traffic, road events, and police are cleared from the race strip during the run. Race wins are saved as one-time transactions. The rival time is currently 21.5 seconds for the Eclipse and 29 seconds for the Civic, set from a baseline drivetrain simulation and still needing controller playtesting. Reset returns the car to spawn for another attempt.
+The purple marker leads to a 400 m drag start near the spawn. Stop on its stripe facing the finish and use Messages, T, or **Stage Race**. The three-count allows clutch and throttle setup; crossing early is a false start. Beat the violet ghost over the line to win $150. The ghost has no collision body, and traffic, road events, and police are cleared from the race strip during the run. Race wins are saved as one-time transactions. The rival time is currently 21.5 seconds for the Eclipse and 29 seconds for the Civic, set from a baseline drivetrain simulation and still needing controller playtesting. Reset returns the car to spawn for another attempt.
 
 **Edit City Map** in Maps opens the 50 × 50 overhead editor. You can change roads, district themes, and service/job/fuel locations, undo and redo, generate another seed, and import/export a validated JSON map. Click **Save here** to keep the current map in this browser. Map and career saves are local to that browser profile; clearing browser storage removes them. Older local maps gain a gas station on import. An unreadable career save is left intact for recovery until the player chooses to replace it.
 

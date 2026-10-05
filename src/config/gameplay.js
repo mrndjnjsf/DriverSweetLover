@@ -12,6 +12,7 @@ export const CLUTCH = Object.freeze({
 
 export const THROTTLE = Object.freeze({
   keyboardReducePerSecond: 2.5, keyboardCoastSeconds: 0,
+  controllerReducePerSecond: .6,
   keyboardBuildPerSecond: 1.1, keyboardCoastDecayPerSecond: .01,
   keyboardPressureTaper: .85,
   keyboardBrakeDelaySeconds: 2, keyboardBrakeRampPerSecond: .35, keyboardGentleBrake: .35,
