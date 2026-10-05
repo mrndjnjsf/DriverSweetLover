@@ -13,13 +13,18 @@ export function advanceKeyboardThrottle(value, buildHeld, reduceHeld, dt, settin
   return Math.max(0, Math.min(1, next));
 }
 
-export function createKeyboardThrottle(){return {value:0,coastSeconds:0};}
+export function createKeyboardThrottle(){return {value:0,coastSeconds:0,emptyHeldSeconds:0,brake:0};}
 
 export function advanceThrottlePressure(control,buildHeld,reduceHeld,dt,settings=THROTTLE){
   const elapsed=Math.max(0,dt);
-  if(buildHeld||reduceHeld)return {value:advanceKeyboardThrottle(control.value,buildHeld,reduceHeld,elapsed,settings),coastSeconds:0};
+  if(buildHeld||reduceHeld){
+    const value=advanceKeyboardThrottle(control.value,buildHeld,reduceHeld,elapsed,settings);
+    const emptyHeldSeconds=reduceHeld&&value===0?(control.emptyHeldSeconds||0)+Math.max(0,elapsed-control.value/settings.keyboardReducePerSecond):0;
+    const brake=Math.max(0,Math.min(settings.keyboardGentleBrake,(emptyHeldSeconds-settings.keyboardBrakeDelaySeconds)*settings.keyboardBrakeRampPerSecond));
+    return {value,coastSeconds:0,emptyHeldSeconds,brake};
+  }
   const coastSeconds=control.coastSeconds+elapsed;
   const decaySeconds=Math.max(0,coastSeconds-settings.keyboardCoastSeconds)-Math.max(0,control.coastSeconds-settings.keyboardCoastSeconds);
   const value=control.value-settings.keyboardCoastDecayPerSecond*decaySeconds;
-  return {value:Math.max(0,Math.min(1,value)),coastSeconds};
+  return {value:Math.max(0,Math.min(1,value)),coastSeconds,emptyHeldSeconds:0,brake:0};
 }

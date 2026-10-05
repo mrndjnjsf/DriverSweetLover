@@ -246,7 +246,7 @@ function makeCar(key){
  vehicleView.setVehicle(key,{appearance});
  $('appearance-select').value=appearance;
  $('rpm-fill').parentElement.style.setProperty('--redline-percent',`${tachPercent(cars[key].redline)}%`);
- document.querySelector('footer>span').textContent=cars[key].transmission==='automatic'?'AUTOMATIC · RT GAS · C ADD / SPACE RELEASE · LB / S / ALT BRAKE · LS / A D STEER · B REVERSE AT A STOP':'LT / CTRL CLUTCH · RT GAS · C ADD / SPACE RELEASE · RS / MOUSE SHIFTER · LS / A D STEER · LB / S / ALT BRAKE · B REVERSE · D-PAD CAMERA';
+ document.querySelector('footer>span').textContent=cars[key].transmission==='automatic'?'AUTOMATIC · RT GAS · X ADD / SPACE RELEASE · LB / S / ALT BRAKE · LS / A D STEER · B REVERSE AT A STOP':'LT / CTRL CLUTCH · RT GAS · X ADD / SPACE RELEASE · RS / MOUSE SHIFTER · LS / A D STEER · LB / S / ALT BRAKE · B REVERSE · D-PAD CAMERA';
  document.body.classList.toggle('automatic-car',cars[key].transmission==='automatic');
 }
 let selected=activeVehicle(career).vehicleId,state=createState(),shifterPos=neutralPosition(),neutralX=0,neutralHoldUntil=0,centerDetentUntil=0,verticalRepeat=null,outerGateSince=null,previousButtons=[],toastTimer=0,lastRunning=true,lastBlown=false,stickArmed=true;
@@ -749,7 +749,7 @@ window.addEventListener('keydown',e=>{
  if(e.code==='KeyP'){e.preventDefault();if(!playingIntro()&&!e.repeat&&!gamePaused())phoneView.toggle();return;}
  if(e.target instanceof Element&&e.target.closest('#career-panel'))return;
  if(e.code==='Enter'&&e.target instanceof Element&&e.target.closest('button'))return;
- if(['KeyA','KeyS','KeyD','KeyH','KeyC','KeyB','KeyN','KeyT','ControlLeft','ControlRight','AltLeft','AltRight','Space','Enter','KeyR','Digit1','Digit2','Digit3','Digit4'].includes(e.code))e.preventDefault();
+ if(['KeyA','KeyS','KeyD','KeyH','KeyX','KeyB','KeyN','KeyT','ControlLeft','ControlRight','AltLeft','AltRight','Space','Enter','KeyR','Digit1','Digit2','Digit3','Digit4'].includes(e.code))e.preventDefault();
  if(gamePaused())return;
  if(e.repeat)return;
  keys.add(e.code);
@@ -823,7 +823,7 @@ function processController(pad,clutch){
 function readInput(dt){
  const pad=gamepad();
  if(pad||touchLayout.matches){throttleKey=0;keyboardThrottle=createKeyboardThrottle();}
- setTextIfChanged($('input-status'),pad?`Controller connected · ${pad.id.split(' (')[0]}`:'Ctrl + mouse shift · C adds gas · Space releases gas · S / Alt brake');
+ setTextIfChanged($('input-status'),pad?`Controller connected · ${pad.id.split(' (')[0]}`:'Ctrl + mouse shift · X adds gas · Space releases / gentle brake · Alt slam brake');
  if(pad){
   if(pad.buttons[10]?.pressed&&!previousButtons[10]){
    controllerClutch=toggleClutchInput(controllerClutch);
@@ -844,8 +844,8 @@ function readInput(dt){
  const clutchTarget=pressed('ControlLeft','ControlRight')?1:0;
  const pedals=tunedCarFor(activeVehicle(career)).pedals;
  clutchKey=advanceKeyboardClutch(clutchKey,Boolean(clutchTarget),dt,pedals.clutch);
- keyboardThrottle=advanceThrottlePressure(keyboardThrottle,pressed('KeyC'),pressed('Space'),dt,pedals.throttle);throttleKey=keyboardThrottle.value;
- return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:0,handbrake:pressed('KeyH')};
+ keyboardThrottle=advanceThrottlePressure(keyboardThrottle,pressed('KeyX'),pressed('Space'),dt,pedals.throttle);throttleKey=keyboardThrottle.value;
+ return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:keyboardThrottle.brake,handbrake:pressed('KeyH')};
 }
 function updateHud(dt){
  if(state.speed>0&&shifterPos.row===0&&Math.abs(shifterPos.lane)>1){

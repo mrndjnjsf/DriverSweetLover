@@ -14,6 +14,7 @@ export const THROTTLE = Object.freeze({
   keyboardReducePerSecond: 2.5, keyboardCoastSeconds: 0,
   keyboardBuildPerSecond: 1.1, keyboardCoastDecayPerSecond: .01,
   keyboardPressureTaper: .85,
+  keyboardBrakeDelaySeconds: 2, keyboardBrakeRampPerSecond: .35, keyboardGentleBrake: .35,
 });
 
 export const COACH = Object.freeze({clearSeconds:3});
