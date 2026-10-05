@@ -8,9 +8,10 @@ export function neutralSlide(x){
 }
 export function neutralLane(x){return x<-.42?-1:x>.42?1:0;}
 export function reverseGate(car){return car?.reverseGate||null;}
-export function readStick(position,x,y,armed,holdUntil=0,now=0,centerDetentUntil=0,verticalRepeat=null,gate=null,outerSince=null){
+export function readStick(position,x,y,armed,holdUntil=0,now=0,centerDetentUntil=0,verticalRepeat=null,gate=null,outerSince=null,speed=0){
+ if(speed>0&&position.row===0&&Math.abs(position.lane)>1)position={lane:Math.sign(position.lane),row:0,gear:0};
  let lane=neutralLane(x),nextOuterSince=null;
- if(gate&&position.row===0&&lane===Math.sign(gate.lane)&&Math.abs(x)>.94){
+ if(speed<=0&&gate&&position.row===0&&lane===Math.sign(gate.lane)&&Math.abs(x)>.94){
   if(position.lane===gate.lane)lane=gate.lane;
   else if(position.lane===Math.sign(gate.lane)){
    nextOuterSince=outerSince??now;

@@ -12,10 +12,15 @@ export function createMouseShifter(position = neutralPosition()) {
 
 // Mouse movement is a virtual hand on the knob while the clutch is down.
 // Crossing the center catches briefly, then continued movement can reach the far lane.
-export function moveMouseShifter(cursor, position, dx, dy, now = 0, gate = null) {
+export function moveMouseShifter(cursor, position, dx, dy, now = 0, gate = null, speed = 0) {
  if (![dx, dy].every(Number.isFinite)) return { cursor, position, changed: false };
+ if(speed>0&&position.row===0&&Math.abs(position.lane)>1){
+  const next={lane:Math.sign(position.lane),row:0,gear:0};
+  return {cursor:createMouseShifter(next),position:next,changed:true};
+ }
  const centerCaught = position.lane === 0 && now < cursor.centerCatchUntil;
- const minLane=Math.min(-1,gate?.lane??-1),maxLane=Math.max(1,gate?.lane??1);
+ const availableGate=speed<=0?gate:null;
+ const minLane=Math.min(-1,availableGate?.lane??-1),maxLane=Math.max(1,availableGate?.lane??1);
  let x = Math.max(minLane*LIMIT, Math.min(maxLane*LIMIT, centerCaught ? 0 : cursor.x + dx));
  let y = Math.max(-LIMIT, Math.min(LIMIT, cursor.y + dy));
  if (position.row !== 0) {

@@ -785,7 +785,7 @@ function applyMouseThrow(dx,dy,now){
  if(cars[selected].transmission==='automatic')return;
  if(clutchKey<MIN_SHIFT_CLUTCH||state.clutch<MIN_SHIFT_CLUTCH)return;
  if(!mouseCursor)mouseCursor=createMouseShifter(shifterPos);
- const moved=moveMouseShifter(mouseCursor,shifterPos,dx,dy,now,reverseGate(cars[selected]));
+ const moved=moveMouseShifter(mouseCursor,shifterPos,dx,dy,now,reverseGate(cars[selected]),state.speed);
  if(!moved.changed){mouseCursor=moved.cursor;return;}
  if(moved.position.gear!==state.gear){const error=selectGearWithWear(moved.position.gear,state.clutch);if(error){notify(error);return;}}
  mouseCursor=moved.cursor;shifterPos=moved.position;neutralX=shifterPos.lane;neutralHoldUntil=0;
@@ -803,7 +803,7 @@ window.addEventListener('mousemove',e=>{
 });
 function processShifterAxes(stickX,stickY,clutch){
  if(cars[selected].transmission==='automatic')return;
- const stick=readStick(shifterPos,stickX,stickY,stickArmed,neutralHoldUntil,performance.now(),centerDetentUntil,verticalRepeat,reverseGate(cars[selected]),outerGateSince);
+ const stick=readStick(shifterPos,stickX,stickY,stickArmed,neutralHoldUntil,performance.now(),centerDetentUntil,verticalRepeat,reverseGate(cars[selected]),outerGateSince,state.speed);
  shifterPos=stick.position;neutralX=stick.neutralX;stickArmed=stick.armed;neutralHoldUntil=stick.holdUntil;centerDetentUntil=stick.centerDetentUntil;verticalRepeat=stick.verticalRepeat;outerGateSince=stick.outerSince;
  if(stick.direction)throwShifter(stick.direction,clutch);
 }

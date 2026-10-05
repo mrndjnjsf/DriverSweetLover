@@ -28,3 +28,18 @@ test('reverse rejects any forward motion without changing gear and accepts stopp
  state.speed=0;assert.equal(selectGear(state,-1,cars.eclipse),'');
  state.gear=0;state.speed=-.5;assert.equal(selectGear(state,-1,cars.civic),'');
 });
+
+for(const id of ['eclipse','civic'])test(`${id} forward motion blocks the reverse lane for mouse and controller`,()=>{
+ const gate=reverseGate(cars[id]),side=Math.sign(gate.lane),position={lane:side,row:0,gear:0};
+ for(const speed of [.001,.4,30]){
+  let moved=moveMouseShifter(createMouseShifter(position),position,side*MOUSE_THROW_PX*5,0,100,gate,speed);
+  assert.equal(moved.position.lane,side);assert.equal(moved.cursor.x,side*MOUSE_THROW_PX);
+  const stick=readStick(position,side,0,true,0,1000,0,null,gate,0,speed);
+  assert.equal(stick.position.lane,side);assert.equal(stick.outerSince,null);
+  const outer={lane:gate.lane,row:0,gear:0};
+  moved=moveMouseShifter(createMouseShifter(outer),outer,0,0,100,gate,speed);
+  assert.equal(moved.position.lane,side);
+  assert.equal(readStick(outer,side,0,true,0,1000,0,null,gate,0,speed).position.lane,side);
+ }
+ for(const speed of [0,-1])assert.equal(moveMouseShifter(createMouseShifter(position),position,side*MOUSE_THROW_PX,0,0,gate,speed).position.lane,gate.lane);
+});
