@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cars, createState, selectGear } from '../src/physics.js';
 import { reverseGate, positionForGear, throwLever, readStick } from '../src/shifter.js';
-import { createMouseShifter, moveMouseShifter, MOUSE_THROW_PX } from '../src/mouse-shifter.js';
+import { createMouseShifter, moveMouseShifter, mouseShifterDisplay, MOUSE_THROW_PX } from '../src/mouse-shifter.js';
 
 for(const id of ['eclipse','civic'])test(`${id} reverse has an outer H-pattern lane and exits through neutral`,()=>{
  const gate=reverseGate(cars[id]),side=Math.sign(gate.lane),direction=gate.row<0?'up':'down';
@@ -37,6 +37,7 @@ for(const id of ['eclipse','civic'])test(`${id} forward motion blocks the revers
   const stick=readStick(position,side,0,true,0,1000,0,null,gate,0,speed);
   assert.equal(stick.position.lane,side);assert.equal(stick.outerSince,null);
   const outer={lane:gate.lane,row:0,gear:0};
+  assert.equal(mouseShifterDisplay(createMouseShifter(outer),outer,speed).x,side);
   moved=moveMouseShifter(createMouseShifter(outer),outer,0,0,100,gate,speed);
   assert.equal(moved.position.lane,side);
   assert.equal(readStick(outer,side,0,true,0,1000,0,null,gate,0,speed).position.lane,side);

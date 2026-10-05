@@ -43,10 +43,10 @@ export function moveMouseShifter(cursor, position, dx, dy, now = 0, gate = null,
 }
 
 // The on-screen knob resists movement near a notch, then snaps to the lane.
-export function mouseShifterDisplay(cursor, position) {
+export function mouseShifterDisplay(cursor, position, speed = 0) {
  const elastic = value => Math.max(-.7, Math.min(.7, value / MOUSE_THROW_PX * .8));
  return {
-  x: position.lane + elastic(cursor.x - position.lane * MOUSE_THROW_PX),
+  x: speed>0&&position.row===0?Math.max(-1,Math.min(1,position.lane+elastic(cursor.x-position.lane*MOUSE_THROW_PX))):position.lane + elastic(cursor.x - position.lane * MOUSE_THROW_PX),
   y: position.row + elastic(cursor.y - position.row * MOUSE_THROW_PX),
  };
 }

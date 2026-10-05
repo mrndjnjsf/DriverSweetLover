@@ -846,6 +846,10 @@ function readInput(dt){
  return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:0,handbrake:pressed('KeyH')};
 }
 function updateHud(dt){
+ if(state.speed>0&&shifterPos.row===0&&Math.abs(shifterPos.lane)>1){
+  shifterPos={lane:Math.sign(shifterPos.lane),row:0,gear:0};neutralX=shifterPos.lane;outerGateSince=null;
+  if(mouseCursor)mouseCursor=createMouseShifter(shifterPos);
+ }
  if(neutralHoldUntil&&performance.now()>=neutralHoldUntil&&!gamepad()&&!pressed('ControlLeft','ControlRight')){
   neutralHoldUntil=0;shifterPos=neutralPosition();neutralX=0;
  }
@@ -856,7 +860,7 @@ function updateHud(dt){
  const advice=advanceCoachHint(coachHint,candidate,dt,{suppressed:state.blown&&!intro});
  $('hint').hidden=!advice;
  if(advice){setTextIfChanged($('hint-title'),advice.title);setTextIfChanged($('hint-text'),advice.text);}
- const mouseDisplay=mouseHeld?mouseShifterDisplay(mouseCursor,shifterPos):null;
+ const mouseDisplay=mouseHeld?mouseShifterDisplay(mouseCursor,shifterPos,state.speed):null;
  renderDrivingHud({state,car:cars[selected],fuelLiters:activeVehicle(career).fuelLiters,
   bitePoint:tunedCarFor(activeVehicle(career)).clutchBitePoint,
   clutchMode:pad?(controllerClutch.mode==='pressure'?'PRESSURE':'DIRECT'):'PRESSURE',

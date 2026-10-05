@@ -24,6 +24,7 @@ export function createDrivingHud(document) {
     const automatic=car.transmission==='automatic';
     const gate=car.reverseGate;
     if(lastReverseLane!==gate?.lane){
+      panel.classList.toggle('reverse-left',gate?.lane<0);
       const minimum=Math.min(-1,gate?.lane??-1);
       cells.forEach(cell=>{
         const gear=Number(cell.dataset.gear);
@@ -63,7 +64,8 @@ export function createDrivingHud(document) {
       lastSlip = state.clutchSlipping;
     }
     write('shift-neutral', 'textContent', automatic?'AUTO · B REVERSE':state.gear === 0 ? 'NEUTRAL RAIL' : state.gear === -1 ? 'REVERSE' : 'GEAR ' + state.gear);
-    write('shift-knob', 'style.left', gate?`${(knobX-Math.min(-1,gate.lane)+.5)*25}%`:`${(knobX+1)*33.333+16.667}%`);
+    const visibleKnobX=state.speed>0&&state.gear===0?Math.max(-1,Math.min(1,knobX)):knobX;
+    write('shift-knob', 'style.left', gate?`${(visibleKnobX-Math.min(-1,gate.lane)+.5)*25}%`:`${(visibleKnobX+1)*33.333+16.667}%`);
     write('shift-knob', 'style.top', `${33 + knobY * 22}px`);
   };
 }
