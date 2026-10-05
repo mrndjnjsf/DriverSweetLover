@@ -25,6 +25,7 @@ async function copy(relative){
   if(relative==='src/config/development.js')data=Buffer.from('export const DEVELOPMENT = Object.freeze({ enabled: false });\n');
   if(relative.endsWith('.js'))data=Buffer.from(data.toString().replace(/((?:from\s*|import\s*)['"])(\.{1,2}\/[^'"]+\.js)(['"])/g,`$1$2?v=${releaseId}$3`));
   if(relative==='index.html')data=Buffer.from(data.toString().replace('src="src/main.js"',`src="src/main.js?v=${releaseId}"`));
+  if(relative==='index.html')data=Buffer.from(data.toString().replace(/href="([^"?]+\.css)"/g,`href="$1?v=${releaseId}"`));
   if(relative==='index.html')data=Buffer.from(data.toString().replace('<head>','<head><meta http-equiv="Content-Security-Policy" content="'+CONTENT_SECURITY_POLICY+'"><meta name="referrer" content="no-referrer">'));
   await mkdir(path.dirname(path.join(output,relative)),{recursive:true});
   await writeFile(path.join(output,relative),data);count++;
