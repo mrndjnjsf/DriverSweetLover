@@ -22,7 +22,7 @@ export function selectGear(s,next,car){
  if(s.clutch<MIN_SHIFT_CLUTCH)return 'Press the clutch to shift';
  if(next===-1&&s.roadMode!=='grid')return 'No reverse on this road';
  if(!Number.isInteger(next)||next< -1||next>6)return 'Invalid gear';
- if(next===-1&&s.speed>.5)return 'Stop before selecting reverse';
+ if(next===-1&&s.speed>0)return 'Stop before selecting reverse';
  if(next===s.gear)return '';
  s.gear=next;return '';
 }

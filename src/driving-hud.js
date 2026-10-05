@@ -10,7 +10,7 @@ export function createDrivingHud(document) {
   };
   const write = (id, property, value) => {
     const key = id + ':' + property;
-    value = String(value);
+    value = property === 'hidden' ? Boolean(value) : String(value);
     if (values.get(key) === value) return;
     const element = node(id);
     if (property.startsWith('style.')) element.style[property.slice(6)] = value;
@@ -19,9 +19,21 @@ export function createDrivingHud(document) {
   };
   const cells = [...document.querySelectorAll('.shift-grid span')];
   const panel = document.querySelector('.dashboard');
-  let lastGear, lastSlip, lastAutomatic;
+  let lastGear, lastSlip, lastAutomatic, lastReverseLane;
   return function render({ state, car, fuelLiters, bitePoint, clutchMode, knobX, knobY }) {
     const automatic=car.transmission==='automatic';
+    const gate=car.reverseGate;
+    if(lastReverseLane!==gate?.lane){
+      const minimum=Math.min(-1,gate?.lane??-1);
+      cells.forEach(cell=>{
+        const gear=Number(cell.dataset.gear);
+        if(gear>0){cell.style.gridColumn=String(Math.floor((gear-1)/2)-minimum);cell.style.gridRow=gear%2?'1':'3';}
+      });
+      write('shift-reverse','style.gridColumn',gate?.lane<0?'1':'4');
+      write('shift-reverse','style.gridRow',gate?.row===-1?'1':'3');
+      write('shift-reverse','hidden',!gate);
+      lastReverseLane=gate?.lane;
+    }
     if(lastAutomatic!==automatic){panel.classList.toggle('automatic',automatic);lastAutomatic=automatic;}
     write('speed', 'textContent', Math.round(Math.abs(state.speed) * 2.23694));
     write('gear', 'textContent', automatic?(state.autoRange==='R'?'R':state.autoRange==='N'?'N':`D${state.gear||1}`):state.gear === 0 ? 'N' : state.gear === -1 ? 'R' : state.gear);
@@ -51,7 +63,7 @@ export function createDrivingHud(document) {
       lastSlip = state.clutchSlipping;
     }
     write('shift-neutral', 'textContent', automatic?'AUTO · B REVERSE':state.gear === 0 ? 'NEUTRAL RAIL' : state.gear === -1 ? 'REVERSE' : 'GEAR ' + state.gear);
-    write('shift-knob', 'style.left', `${(knobX + 1) * 33.333 + 16.667}%`);
+    write('shift-knob', 'style.left', gate?`${(knobX-Math.min(-1,gate.lane)+.5)*25}%`:`${(knobX+1)*33.333+16.667}%`);
     write('shift-knob', 'style.top', `${33 + knobY * 22}px`);
   };
 }

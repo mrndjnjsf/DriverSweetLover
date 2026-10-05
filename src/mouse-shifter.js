@@ -12,24 +12,26 @@ export function createMouseShifter(position = neutralPosition()) {
 
 // Mouse movement is a virtual hand on the knob while the clutch is down.
 // Crossing the center catches briefly, then continued movement can reach the far lane.
-export function moveMouseShifter(cursor, position, dx, dy, now = 0) {
+export function moveMouseShifter(cursor, position, dx, dy, now = 0, gate = null) {
  if (![dx, dy].every(Number.isFinite)) return { cursor, position, changed: false };
  const centerCaught = position.lane === 0 && now < cursor.centerCatchUntil;
- let x = Math.max(-LIMIT, Math.min(LIMIT, centerCaught ? 0 : cursor.x + dx));
+ const minLane=Math.min(-1,gate?.lane??-1),maxLane=Math.max(1,gate?.lane??1);
+ let x = Math.max(minLane*LIMIT, Math.min(maxLane*LIMIT, centerCaught ? 0 : cursor.x + dx));
  let y = Math.max(-LIMIT, Math.min(LIMIT, cursor.y + dy));
  if (position.row !== 0) {
   const leaving = position.row < 0 ? y > -MOUSE_THROW_PX + VERTICAL_NOTCH_PX : y < MOUSE_THROW_PX - VERTICAL_NOTCH_PX;
   if (!leaving) return { cursor: { ...cursor, x: position.lane * MOUSE_THROW_PX, y }, position, changed: false };
   const direction = position.row < 0 ? 'down' : 'up';
-  return { cursor: { x: position.lane * MOUSE_THROW_PX, y: 0, centerCatchUntil: 0 }, position: throwLever(position, direction), changed: true };
+  return { cursor: { x: position.lane * MOUSE_THROW_PX, y: 0, centerCatchUntil: 0 }, position: throwLever(position, direction,gate), changed: true };
  }
- if (x < position.lane * MOUSE_THROW_PX - HORIZONTAL_NOTCH_PX && position.lane > -1)
+ if (x < position.lane * MOUSE_THROW_PX - HORIZONTAL_NOTCH_PX && position.lane > minLane)
   return { cursor: { x: (position.lane - 1) * MOUSE_THROW_PX, y: 0, centerCatchUntil: position.lane === 1 ? now + CENTER_CATCH_MS : 0 }, position: { lane: position.lane - 1, row: 0, gear: 0 }, changed: true };
- if (x > position.lane * MOUSE_THROW_PX + HORIZONTAL_NOTCH_PX && position.lane < 1)
+ if (x > position.lane * MOUSE_THROW_PX + HORIZONTAL_NOTCH_PX && position.lane < maxLane)
   return { cursor: { x: (position.lane + 1) * MOUSE_THROW_PX, y: 0, centerCatchUntil: position.lane === -1 ? now + CENTER_CATCH_MS : 0 }, position: { lane: position.lane + 1, row: 0, gear: 0 }, changed: true };
- x = Math.max(-LIMIT, Math.min(LIMIT, x));
+ x = Math.max(minLane*LIMIT, Math.min(maxLane*LIMIT, x));
  if (y < -VERTICAL_NOTCH_PX || y > VERTICAL_NOTCH_PX) {
-  const next = throwLever(position, y < 0 ? 'up' : 'down');
+  const next = throwLever(position, y < 0 ? 'up' : 'down',gate);
+  if(!next)return {cursor:{...cursor,x,y:0},position,changed:false};
   return { cursor: { x: position.lane * MOUSE_THROW_PX, y: next.row * MOUSE_THROW_PX, centerCatchUntil: 0 }, position: next, changed: true };
  }
  return { cursor: { x, y, centerCatchUntil: cursor.centerCatchUntil }, position, changed: false };

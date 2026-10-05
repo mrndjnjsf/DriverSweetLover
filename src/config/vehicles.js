@@ -12,6 +12,7 @@ export const VEHICLES = {
       idleCapacity: 32, loadCapacity: 580, couplingResponse: 5, torqueMultiplier: 1.45 },
   },
   eclipse: {
+    reverseGate: { lane: -2, row: -1 },
     name: 'Mitsubishi Eclipse V6',
     mass: 1510,
     peakTorque: 352,
@@ -26,6 +27,7 @@ export const VEHICLES = {
     traction: 8.5,
   },
   civic: {
+    reverseGate: { lane: 2, row: 1 },
     name: 'Honda Civic Si',
     mass: 1340,
     peakTorque: 260,

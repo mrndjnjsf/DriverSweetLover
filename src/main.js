@@ -40,7 +40,7 @@ import { chooseStarter } from './career.js';
 import { createVehicleView } from './presentation/vehicle-view.js';
 import * as THREE from '../vendor/three.module.js';
 import {cars,createState,start,step,clamp} from './physics.js';
-import {neutralPosition,positionForGear,readStick,throwLever} from './shifter.js';
+import {neutralPosition,positionForGear,readStick,throwLever,reverseGate} from './shifter.js';
 import {createMouseShifter,moveMouseShifter,mouseShifterDisplay,mouseEdgeDirections} from './mouse-shifter.js';
 import {rumbleLevels} from './feedback.js';
 import {createGridMap,gridPoint,importGridMap,nearestRoadPoint,roadOpen,findRoute} from './grid-map.js';
@@ -248,7 +248,7 @@ function makeCar(key){
  document.querySelector('footer>span').textContent=cars[key].transmission==='automatic'?'AUTOMATIC · RT / SPACE GAS · LB / S / ALT BRAKE · LS / A D STEER · B REVERSE AT A STOP':'LT / CTRL CLUTCH · RT / SPACE GAS · RS / MOUSE SHIFTER · LS / A D STEER · LB / S / ALT BRAKE · B REVERSE · D-PAD CAMERA';
  document.body.classList.toggle('automatic-car',cars[key].transmission==='automatic');
 }
-let selected=activeVehicle(career).vehicleId,state=createState(),shifterPos=neutralPosition(),neutralX=0,neutralHoldUntil=0,centerDetentUntil=0,verticalRepeat=null,previousButtons=[],toastTimer=0,lastRunning=true,lastBlown=false,stickArmed=true;
+let selected=activeVehicle(career).vehicleId,state=createState(),shifterPos=neutralPosition(),neutralX=0,neutralHoldUntil=0,centerDetentUntil=0,verticalRepeat=null,outerGateSince=null,previousButtons=[],toastTimer=0,lastRunning=true,lastBlown=false,stickArmed=true;
 dragRace=createDragRace(dragCourse,{rivalTimeSeconds:rivalTimeForCar(selected)});
 state.roadMode='grid';
 function placeAtSpawn(){if(sandboxMode&&profileParams.has('fleet')){const garage=map.locations.find(location=>location.kind==='garage');const point=gridPoint(map,garage.col,garage.row);state.x=point.x+3.6;state.z=point.z;return;}const practiceSite=sandboxMode?parkingSites.find(site=>site.id===profileParams.get('parking')):null;if(practiceSite){state.x=practiceSite.x;state.z=practiceSite.z;state.heading=practiceSite.heading;return;}const spawn=map.locations.find(location=>location.kind==='spawn');if(spawn){const point=gridPoint(map,spawn.col,spawn.row);state.x=point.x+map.roadWidth*.25;state.z=point.z+map.blockSize*.35;}}
@@ -611,7 +611,7 @@ function resetDrivingState(){
  dragRace=createDragRace(dragCourse,{rivalTimeSeconds:rivalTimeForCar(selected)});
  dragRaceId=null;resetLifeLocations(life);cameraPull=0;
  shifterPos=neutralPosition();mouseCursor=null;neutralX=0;
- neutralHoldUntil=0;centerDetentUntil=0;verticalRepeat=null;stickArmed=true;
+ neutralHoldUntil=0;centerDetentUntil=0;verticalRepeat=null;outerGateSince=null;stickArmed=true;
  lastBlown=false;failureStart=0;$('engine-failure').hidden=true;
  clutchKey=0;throttleKey=0;touchClutch.value=100;$('touch-clutch-label').textContent='100%';
 }
@@ -696,20 +696,19 @@ function selectGearWithWear(nextGear,clutch){
 function shiftBy(dir,clutch=state.clutch){
  const oldPosition=shifterPos,message=selectGearWithWear(clamp(state.gear+dir,0,6),clutch);
  if(message){notify(message);return;}
- shifterPos=state.gear===0&&oldPosition.row!==0?{lane:oldPosition.lane,row:0,gear:0}:positionForGear(state.gear);
+ shifterPos=state.gear===0&&oldPosition.row!==0?{lane:oldPosition.lane,row:0,gear:0}:positionForGear(state.gear,reverseGate(cars[selected]));
  neutralX=shifterPos.lane;neutralHoldUntil=state.gear===0&&oldPosition.row!==0?performance.now()+SHIFTER.gearExitHoldMs:0;
  notify(state.gear===0?'Neutral':`Gear ${state.gear}`);
 }
 function throwShifter(direction,clutch){
  if(state.blown)return;
- if(state.gear===-1){notify('Select Neutral before a forward gear');return;}
  const wasInGear=shifterPos.row!==0;
- const next=throwLever(shifterPos,direction);
+ const next=throwLever(shifterPos,direction,reverseGate(cars[selected]));
  if(!next){notify('Pull the shifter back to Neutral first');return;}
  if(next.gear!==state.gear){
   const message=selectGearWithWear(next.gear,clutch);
   if(message){notify(message);return;}
-  notify(next.gear===0?'Neutral':`Gear ${next.gear}`);
+  notify(next.gear===0?'Neutral':next.gear===-1?'Reverse':`Gear ${next.gear}`);
  }
  shifterPos=next;
  neutralX=next.lane;
@@ -724,7 +723,7 @@ function toggleReverse(clutch){
  if(state.gear!==0&&state.gear!==-1){notify('Select Neutral before Reverse');return;}
  const next=state.gear===-1?0:-1,message=selectGearWithWear(next,clutch);
  if(message){notify(message);return;}
- shifterPos=neutralPosition();neutralX=0;neutralHoldUntil=0;notify(next===-1?'Reverse':'Neutral');
+ shifterPos=positionForGear(next,reverseGate(cars[selected]));neutralX=shifterPos.lane;neutralHoldUntil=0;notify(next===-1?'Reverse':'Neutral');
 }
 function reset(){if(intro){if(intro.phase==='crash'||intro.phase==='replacement')return;intro=createIntro({testDrive:testDrivingMustang()});}resetDrivingState();updateRaceHud();notify('Car reset');}
 $('help').onclick=()=>$('controls').showModal();$('restart').onclick=startEngine;$('reset').onclick=reset;$('reset-blown').onclick=reset;
@@ -786,11 +785,11 @@ function applyMouseThrow(dx,dy,now){
  if(cars[selected].transmission==='automatic')return;
  if(clutchKey<MIN_SHIFT_CLUTCH||state.clutch<MIN_SHIFT_CLUTCH)return;
  if(!mouseCursor)mouseCursor=createMouseShifter(shifterPos);
- const moved=moveMouseShifter(mouseCursor,shifterPos,dx,dy,now);
+ const moved=moveMouseShifter(mouseCursor,shifterPos,dx,dy,now,reverseGate(cars[selected]));
  if(!moved.changed){mouseCursor=moved.cursor;return;}
  if(moved.position.gear!==state.gear){const error=selectGearWithWear(moved.position.gear,state.clutch);if(error){notify(error);return;}}
  mouseCursor=moved.cursor;shifterPos=moved.position;neutralX=shifterPos.lane;neutralHoldUntil=0;
- if(shifterPos.gear!==0)notify(`Gear ${shifterPos.gear}`);
+ if(shifterPos.gear!==0)notify(shifterPos.gear===-1?'Reverse':`Gear ${shifterPos.gear}`);
 }
 window.addEventListener('mousemove',e=>{
  if(!pressed('ControlLeft','ControlRight')||gamepad()||touchLayout.matches||gamePaused()||state.blown||e.target instanceof Element&&e.target.closest('#career-panel, #mouse-lock-prompt, dialog, .map-editor'))return;
@@ -804,8 +803,8 @@ window.addEventListener('mousemove',e=>{
 });
 function processShifterAxes(stickX,stickY,clutch){
  if(cars[selected].transmission==='automatic')return;
- const stick=readStick(shifterPos,stickX,stickY,stickArmed,neutralHoldUntil,performance.now(),centerDetentUntil,verticalRepeat);
- shifterPos=stick.position;neutralX=stick.neutralX;stickArmed=stick.armed;neutralHoldUntil=stick.holdUntil;centerDetentUntil=stick.centerDetentUntil;verticalRepeat=stick.verticalRepeat;
+ const stick=readStick(shifterPos,stickX,stickY,stickArmed,neutralHoldUntil,performance.now(),centerDetentUntil,verticalRepeat,reverseGate(cars[selected]),outerGateSince);
+ shifterPos=stick.position;neutralX=stick.neutralX;stickArmed=stick.armed;neutralHoldUntil=stick.holdUntil;centerDetentUntil=stick.centerDetentUntil;verticalRepeat=stick.verticalRepeat;outerGateSince=stick.outerSince;
  if(stick.direction)throwShifter(stick.direction,clutch);
 }
 function processController(pad,clutch){

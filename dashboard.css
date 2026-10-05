@@ -82,3 +82,5 @@
 .dashboard.automatic .gear>span{font-size:32px}
 #career-panel[hidden]{display:none}
 body.automatic-car .touch-clutch{display:none}
+
+.dashboard:not(.automatic) .shift-grid{grid-template-columns:repeat(4,1fr);background:repeating-linear-gradient(90deg,transparent 0%,transparent 11%,#486c60 11%,#486c60 14%,transparent 14%,transparent 25%),linear-gradient(180deg,transparent 48%,#486c60 48%,#486c60 52%,transparent 52%)}
