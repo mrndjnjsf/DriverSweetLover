@@ -54,7 +54,7 @@ node scripts/benchmark.mjs
 
 The benchmark measures torque computation on the CPU and emits deterministic driving snapshots. It does **not** measure WebGL FPS. Test actual driving and shifts after tuning; regression tests encode current defaults and may need deliberate updates if you intentionally change behavior.
 
-Keyboard throttle: `gameplay.js` → `THROTTLE` controls Space build and release rates (full pedal travel per second). Defaults: 1.5 build, 3 release. V overrides to full throttle; release eases down from the current value.
+Keyboard throttle: `gameplay.js` → `THROTTLE` controls Space build/release rates and pressure taper. Defaults: 1.5 build, 0.75 release, 0.8 taper. Pedal movement slows as pressure rises: buildup starts at 150 percentage points per second and slows to 30 near full pressure. Release follows the same curve at half speed (about 2.7 seconds from full to empty, versus 1.3 seconds to fill). A zero taper gives linear movement; keep taper below 1 so Space can reach full throttle. V overrides to full throttle instantly.
 
 Opening tutorial: `src/config/intro.js` controls drive distances, brake hold, initial worn condition, and crash delay. Mustang automatic shift and converter values live under `VEHICLES.mustang.automatic` in `src/config/vehicles.js`. The automatic only appears in the intro; Eclipse/Civic tuning is unchanged.
 

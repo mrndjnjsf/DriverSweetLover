@@ -11,7 +11,8 @@ export const CLUTCH = Object.freeze({
 });
 
 export const THROTTLE = Object.freeze({
-  keyboardBuildPerSecond: 1.5, keyboardReleasePerSecond: 3,
+  keyboardBuildPerSecond: 1.5, keyboardReleasePerSecond: .75,
+  keyboardPressureTaper: .8,
 });
 
 export const SHIFTER = Object.freeze({
