@@ -11,6 +11,9 @@ test('release includes every local module/asset reference and no private files',
   const built=spawnSync(process.execPath,['scripts/build.mjs'],{cwd:root,encoding:'utf8'});
   assert.equal(built.status,0,built.stderr);
   const dir=path.join(root,'dist');
+  const releaseHtml=await readFile(path.join(dir,'index.html'),'utf8');
+  const releaseId=releaseHtml.match(/src="src\/main\.js\?v=([a-f0-9]+)"/)?.[1];
+  assert.ok(releaseId,'Entry module must have a deployment version');
   async function files(folder){const entries=await readdir(folder,{withFileTypes:true});return (await Promise.all(entries.map(entry=>entry.isDirectory()?files(path.join(folder,entry.name)):path.join(folder,entry.name)))).flat();}
   for(const file of await files(dir)){
     const relative=path.relative(dir,file).split(path.sep).join('/');
@@ -18,7 +21,10 @@ test('release includes every local module/asset reference and no private files',
     if(!/\.(?:js|html)$/.test(file))continue;
     const content=await readFile(file,'utf8');
     const references=relative.endsWith('.js')?[...content.matchAll(/(?:from\s*|import\s*)['"](\.{1,2}\/[^'"]+)['"]/g)].map(match=>match[1]):[...content.matchAll(/(?:src|href)="([^"#]+)"/g)].map(match=>match[1]);
-    for(const reference of references){const target=path.resolve(path.dirname(file),reference);assert.ok(target.startsWith(dir+path.sep));assert.ok((await stat(target)).isFile(),`${relative}: ${reference}`);}
+    for(const reference of references){
+      if(reference.includes('.js'))assert.ok(reference.endsWith(`?v=${releaseId}`),`Module version mismatch: ${reference}`);
+      const target=path.resolve(path.dirname(file),reference.split('?')[0]);assert.ok(target.startsWith(dir+path.sep));assert.ok((await stat(target)).isFile(),`${relative}: ${reference}`);
+    }
   }
   assert.match(await readFile(path.join(dir,'src/config/development.js'),'utf8'),/enabled: false/);
   assert.match(await readFile(path.join(dir,'index.html'),'utf8'),/Content-Security-Policy/);
