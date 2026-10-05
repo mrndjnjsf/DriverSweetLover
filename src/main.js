@@ -844,7 +844,7 @@ function readInput(dt){
  const clutchTarget=pressed('ControlLeft','ControlRight')?1:0;
  const pedals=tunedCarFor(activeVehicle(career)).pedals;
  clutchKey=advanceKeyboardClutch(clutchKey,Boolean(clutchTarget),dt,pedals.clutch);
- keyboardThrottle=advanceThrottlePressure(keyboardThrottle,pressed('KeyX'),pressed('Space'),dt,pedals.throttle,pressed('KeyC'));throttleKey=keyboardThrottle.value;
+ keyboardThrottle=advanceThrottlePressure(keyboardThrottle,pressed('KeyX'),pressed('Space'),dt,pedals.throttle,pressed('KeyC'),pressed('AltLeft','AltRight'));throttleKey=keyboardThrottle.value;
  return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:keyboardThrottle.brake,handbrake:pressed('KeyH')};
 }
 function updateHud(dt){

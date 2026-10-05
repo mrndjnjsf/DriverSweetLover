@@ -3,6 +3,14 @@ import assert from 'node:assert/strict';
 import {advanceKeyboardThrottle as advance,createKeyboardThrottle,advanceThrottlePressure as pressure} from '../src/keyboard-throttle.js';
 import {THROTTLE} from '../src/config/gameplay.js';
 
+test('Alt braking immediately clears all pressure and overrides X and C',()=>{
+ const full=pressure(createKeyboardThrottle(),false,false,0,THROTTLE,true);
+ const stopped=pressure(full,true,false,.01,THROTTLE,true,true);
+ assert.deepEqual(stopped,createKeyboardThrottle());
+ assert.equal(pressure(stopped,false,false,1).value,0);
+ assert.ok(pressure(stopped,true,false,.1).value>0);
+});
+
 test('C instantly sets full throttle, clears delayed brakes, and yields to Space',()=>{
  const before={value:.3,coastSeconds:5,emptyHeldSeconds:3,brake:.35};
  const full=pressure(before,false,false,0,THROTTLE,true);
