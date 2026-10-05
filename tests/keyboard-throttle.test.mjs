@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {advanceKeyboardThrottle as advance,createKeyboardThrottle,advanceThrottlePressure as pressure} from '../src/keyboard-throttle.js';
+import {THROTTLE} from '../src/config/gameplay.js';
+
+test('C instantly sets full throttle, clears delayed brakes, and yields to Space',()=>{
+ const before={value:.3,coastSeconds:5,emptyHeldSeconds:3,brake:.35};
+ const full=pressure(before,false,false,0,THROTTLE,true);
+ assert.equal(full.value,1);assert.equal(full.brake,0);assert.equal(full.emptyHeldSeconds,0);
+ assert.equal(pressure(full,false,false,1).value,.99);
+ assert.ok(pressure(full,false,true,.1,THROTTLE,true).value<1);
+ assert.equal(before.value,.3);
+});
 
 test('X builds more slowly near full and preserves frame-rate independence',()=>{
  assert.ok(advance(0,true,false,.2)>(advance(.8,true,false,.2)-.8)*2);

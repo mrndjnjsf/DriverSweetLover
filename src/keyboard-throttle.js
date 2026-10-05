@@ -15,8 +15,9 @@ export function advanceKeyboardThrottle(value, buildHeld, reduceHeld, dt, settin
 
 export function createKeyboardThrottle(){return {value:0,coastSeconds:0,emptyHeldSeconds:0,brake:0};}
 
-export function advanceThrottlePressure(control,buildHeld,reduceHeld,dt,settings=THROTTLE){
+export function advanceThrottlePressure(control,buildHeld,reduceHeld,dt,settings=THROTTLE,fullHeld=false){
   const elapsed=Math.max(0,dt);
+  if(fullHeld&&!reduceHeld)return {...createKeyboardThrottle(),value:1};
   if(buildHeld||reduceHeld){
     const value=advanceKeyboardThrottle(control.value,buildHeld,reduceHeld,elapsed,settings);
     const emptyHeldSeconds=reduceHeld&&value===0?(control.emptyHeldSeconds||0)+Math.max(0,elapsed-control.value/settings.keyboardReducePerSecond):0;

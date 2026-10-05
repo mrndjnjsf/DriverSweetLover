@@ -19,7 +19,7 @@ The game uses the browser Gamepad API for a standard Xbox controller. Controller
 | Action | Xbox controller | Keyboard and mouse |
 | --- | --- | --- |
 | Steer and turn | Left stick | A / D |
-| Gas / brake | RT / LB | X increases gas, Space decreases gas, then gently brakes after 2 seconds empty / Alt or S slams brakes |
+| Gas / brake | RT / LB | X increases gas, C full gas, Space decreases gas, then gently brakes after 2 seconds empty / Alt or S slams brakes |
 | Clutch | LT | Hold Ctrl to build pressure; release to let it out |
 | Manual H-pattern | Right stick | Hold Ctrl, then move the mouse through the gate |
 | Reverse at a stop | B, with clutch pressed | B, with clutch pressed |

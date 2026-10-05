@@ -30,7 +30,7 @@ export function advanceIntro(intro,state,dt) {
 }
 export function introAdvice(intro,input='keyboard') {
   if(intro.phase==='test-drive')return null;
-  const gas=input==='controller'?'RT':input==='touch'?'GAS':'X to add gas; Space to release';
+  const gas=input==='controller'?'RT':input==='touch'?'GAS':'X to add gas (C for full); Space to release';
   const steer=input==='controller'?'left stick':input==='touch'?'steering arrows':'A / D';
   const brake=input==='controller'?'LB':input==='touch'?'BRAKE':'Alt (or hold Space after gas empties)';
   const text=intro.phase==='drive'?`Your old automatic Mustang is tired, but it still moves. Use ${gas} for gas and ${steer} to steer. Drive along the street.`
