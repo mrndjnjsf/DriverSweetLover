@@ -841,6 +841,7 @@ function updateRumble(now){
  }catch{hapticsFailed=true;}
 }
 $('rumble').onclick=()=>{if(gamepad()&&(!hapticActuator(gamepad())||hapticsFailed)){notify('Rumble unavailable in this browser or controller');return;}rumbleEnabled=!rumbleEnabled;notify(rumbleEnabled?'Rumble on':'Rumble off');};
+let soundEnabled=true;
 let audioCtx,osc,volume,engineFilter,v6Body,v6BodyVolume,v6Pulse,v6Lfo,v6LfoDepth,whine,whineVolume,air,airVolume,noiseBuffer,lastBypass=0,lastThrottle=0,lastClutch=1;
 function makeNoise(ctx){
  const buffer=ctx.createBuffer(1,Math.round(ctx.sampleRate),ctx.sampleRate),samples=buffer.getChannelData(0);
@@ -873,8 +874,9 @@ function playImpact(){
  gain.gain.setValueAtTime(.12,t);gain.gain.exponentialRampToValueAtTime(.001,t+.23);
  source.connect(filter).connect(gain).connect(audioCtx.destination);source.start(t);source.stop(t+.24);
 }
-function toggleSound(){
- if(audioCtx){audioCtx.close();audioCtx=null;$('sound').textContent='SOUND OFF';return;}
+function startSound(){
+ if(!soundEnabled)return;
+ if(audioCtx){if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});return;}
  audioCtx=new AudioContext();osc=audioCtx.createOscillator();volume=audioCtx.createGain();engineFilter=audioCtx.createBiquadFilter();
  osc.type=selected==='civic'?'triangle':'sawtooth';engineFilter.type='lowpass';engineFilter.frequency.value=selected==='civic'?8000:280;
  volume.gain.value=0;osc.connect(engineFilter).connect(volume).connect(audioCtx.destination);osc.start();
@@ -888,8 +890,18 @@ function toggleSound(){
  const airFilter=audioCtx.createBiquadFilter();airFilter.type='bandpass';airFilter.frequency.value=1850;airFilter.Q.value=.8;
  airVolume=audioCtx.createGain();airVolume.gain.value=0;air.connect(airFilter).connect(airVolume).connect(audioCtx.destination);air.start();
  $('sound').textContent='SOUND ON';
+ if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+}
+function toggleSound(){
+ soundEnabled=!soundEnabled;
+ if(!soundEnabled){if(audioCtx){audioCtx.close().catch(()=>{});audioCtx=null;}$('sound').textContent='SOUND OFF';}
+ else startSound();
 }
 $('sound').onclick=toggleSound;
+// Browser audio unlocks on a gesture. Muting must remain respected afterward.
+function unlockSound(event){if(event.target instanceof Element&&event.target.closest('#sound'))return;startSound();}
+document.addEventListener('pointerdown',unlockSound);
+document.addEventListener('keydown',unlockSound);
 function beginEngineFailure(now){
  failureStart=now;stallRumbleUntil=now+850;playEngineBreak();
  if(!sandboxMode){

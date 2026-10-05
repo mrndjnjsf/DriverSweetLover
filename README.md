@@ -12,7 +12,7 @@ A local browser driving RPG prototype built around manual shifting and clutch co
 
 Use Node.js to run `node server.mjs` in this folder, then open <http://localhost:5174/> in a desktop browser. The server listens only on `127.0.0.1`; no package installation or online service is required. Run `node --test tests/*.test.mjs` for the logic checks.
 
-The game uses the browser Gamepad API for a standard Xbox controller. Controller rumble depends on the controller, OS, and browser. Sound is off until clicked. The touch layout remains experimental.
+The game uses the browser Gamepad API for a standard Xbox controller. Controller rumble depends on the controller, OS, and browser. Sound is enabled by default and starts on the first click, tap, or keyboard press; the Sound button mutes it. The touch layout remains experimental.
 
 ## Drive and shift
 
