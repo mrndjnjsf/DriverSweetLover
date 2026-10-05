@@ -24,7 +24,6 @@ export function controlSettings(condition){
   return {
     throttle:{...THROTTLE,
       keyboardBuildPerSecond:THROTTLE.keyboardBuildPerSecond*(1+throttleGain),
-      keyboardReleasePerSecond:THROTTLE.keyboardReleasePerSecond*(1+throttleGain),
       keyboardPressureTaper:THROTTLE.keyboardPressureTaper-(engineUpgrade?(response==='responsive'?.5:.25)*engineQuality:0)},
     clutch:{...CLUTCH,
       keyboardBuildPerSecond:CLUTCH.keyboardBuildPerSecond*(1+.5*clutchGain),

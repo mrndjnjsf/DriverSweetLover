@@ -15,14 +15,15 @@ test('Space reduces immediately, overrides C, and never goes below zero',()=>{
  assert.equal(advance(.4,false,false,1),.4);
  assert.equal(advance(.4,true,false,-1),.4);
 });
-test('selected pressure holds for two seconds then fades, with accurate coast-boundary integration',()=>{
+test('selected pressure loses one percentage point per second with frame-rate independence',()=>{
  let control=pressure(createKeyboardThrottle(),true,false,.4);
  const value=control.value;
- control=pressure(control,false,false,2);assert.equal(control.value,value);
+ control=pressure(control,false,false,2);assert.ok(Math.abs(control.value-(value-.02))<1e-10);
  control=pressure(control,false,false,.1);assert.ok(control.value<value);
  control=pressure(control,true,false,.05);assert.equal(control.coastSeconds,0);
  let split={value:.8,coastSeconds:0};for(let i=0;i<360;i++)split=pressure(split,false,false,1/120);
  const whole=pressure({value:.8,coastSeconds:0},false,false,3);
  assert.ok(Math.abs(split.value-whole.value)<1e-10);
- assert.equal(pressure({value:1,coastSeconds:0},false,false,7).value,0);
+ assert.equal(pressure({value:1,coastSeconds:0},false,false,100).value,0);
+ for(const value of [.3,.7,1])assert.ok(Math.abs(pressure({value,coastSeconds:0},false,false,1).value-(value-.01))<1e-10);
 });
