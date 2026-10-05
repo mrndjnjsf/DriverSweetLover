@@ -30,6 +30,8 @@ New loops: `life.js` controls parking containment/settle thresholds, need growth
 
 ## Practical examples
 
+Driving tips: `gameplay.js` → `COACH.clearSeconds` holds a warning until its trigger has stayed clear for 3 gameplay seconds. Recurring redline/bogging restarts the countdown. More urgent warnings replace a held tip immediately; paused or hidden gameplay does not drain its hold time. Engine failure clears driving tips because the failure screen explains recovery.
+
 - A longer mouse throw: raise `mouseTravelPx` and both notch distances together, keeping notches below travel.
 - Faster keyboard clutch: increase `keyboardBuildPerSecond`; lowering `keyboardReleasePerSecond` makes release gentler.
 - Less punishing maintenance: increase `clutchLifeWorkJ` and lower `earlyShiftHealthCost`. Higher lifetime means less wear.

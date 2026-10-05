@@ -23,6 +23,8 @@ import { resolveParkedContact } from './parked-contact.js';
 import { WORLD, CAMERA, RUNTIME, SHIFTER } from "./config/gameplay.js";
 import { createDrivingHud } from "./driving-hud.js";
 import { drivingAdvice } from './driving-coach.js';
+import { createCoachHint, advanceCoachHint } from './coach-hint.js';
+const coachHint=createCoachHint();
 import { selectAutomaticRange } from './automatic-transmission.js';
 import { createIntro, createIntroCareer, advanceIntro, introAdvice, replacementCareer, shouldPlayFirstDrive } from './intro.js';
 import { developmentToolsAvailable } from './development-mode.js';
@@ -801,14 +803,15 @@ function readInput(dt){
  throttleKey=advanceKeyboardThrottle(throttleKey,pressed('Space'),pressed('KeyV'),dt);
  return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:0,handbrake:pressed('KeyH')};
 }
-function updateHud(){
+function updateHud(dt){
  if(neutralHoldUntil&&performance.now()>=neutralHoldUntil&&!gamepad()&&!pressed('ControlLeft','ControlRight')){
   neutralHoldUntil=0;shifterPos=neutralPosition();neutralX=0;
  }
  const pad=gamepad();
  const mouseHeld=mouseCursor&&pressed('ControlLeft','ControlRight')&&!pad;
  const inputType=pad?'controller':touchLayout.matches?'touch':'keyboard';
- const advice=drivingAdvice(state,cars[selected],{fuelLiters:activeVehicle(career).fuelLiters,bitePoint:tunedCarFor(activeVehicle(career)).clutchBitePoint,input:inputType})||(intro?introAdvice(intro,inputType):null);
+ const candidate=drivingAdvice(state,cars[selected],{fuelLiters:activeVehicle(career).fuelLiters,bitePoint:tunedCarFor(activeVehicle(career)).clutchBitePoint,input:inputType})||(intro?introAdvice(intro,inputType):null);
+ const advice=advanceCoachHint(coachHint,candidate,dt,{suppressed:state.blown&&!intro});
  $('hint').hidden=!advice;
  if(advice){setTextIfChanged($('hint-title'),advice.title);setTextIfChanged($('hint-text'),advice.text);}
  const mouseDisplay=mouseHeld?mouseShifterDisplay(mouseCursor,shifterPos):null;
@@ -1071,7 +1074,7 @@ function frame(now){
   whineVolume.gain.setTargetAtTime(selected==='civic'&&state.running?state.boost*(.0025+state.throttle*.003):0,t,.09);
   airVolume.gain.setTargetAtTime(selected==='civic'&&state.running?state.boost*state.throttle*.0025:0,t,.09);
  }
- updateHud();updateRumble(now);
+ updateHud(paused?0:dt);updateRumble(now);
  const renderStart=profileEnabled?performance.now():0;
  if(!reducedMotion.matches&&mph>55&&!profileNoBlur){
   blurMaterial.uniforms.strength.value=clamp((mph-55)/110,0,1)*.085;

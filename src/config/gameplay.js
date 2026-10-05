@@ -15,6 +15,8 @@ export const THROTTLE = Object.freeze({
   keyboardPressureTaper: .8,
 });
 
+export const COACH = Object.freeze({clearSeconds:3});
+
 export const SHIFTER = Object.freeze({
   mouseTravelPx: 150, mouseHorizontalNotchPx: 120, mouseVerticalNotchPx: 120,
   mouseCenterCatchMs: 240, mouseEdgeMarginPx: 18,
