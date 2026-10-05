@@ -44,6 +44,7 @@ export function availableTorque(s,car){
  return Math.min(torque,powerCeiling);
 }
 function stepSingle(s,input,car,dt){
+ const previousThrottle=s.throttle;
  s.clutch=clamp(input.clutch,0,1);s.throttle=clamp(input.throttle,0,1);s.brake=clamp(input.brake,0,1);
  const automatic=car.transmission==='automatic';
  if(automatic){s.clutch=0;advanceAutomatic(s,car,s.throttle,dt);}
@@ -70,7 +71,12 @@ function stepSingle(s,input,car,dt){
  // friction again at wide-open throttle erased much of the Si's high-rpm power.
  const friction=s.running?(19+s.rpm*.003)*(1-s.throttle):42;
  const engineAcceleration=(combustion+idle-friction-coupling)/(car.engineInertia||.32);
- s.rpm=s.blown?0:Math.max(0,(omega+engineAcceleration*(engineAcceleration>0&&!automatic?DRIVING.rpmRiseMultiplier:1)*dt)*30/Math.PI);
+ if(previousThrottle>.02&&s.throttle<=.02)s.revHangRemaining=car.revHangSeconds||0;
+ if(s.throttle>.02||!s.running||s.blown)s.revHangRemaining=0;
+ const hanging=(s.revHangRemaining||0)>0&&(!ratio||engagement<.05)&&engineAcceleration<0;
+ const accelerationScale=engineAcceleration>0&&!automatic?DRIVING.rpmRiseMultiplier:hanging?car.revHangDecelerationScale:1;
+ s.rpm=s.blown?0:Math.max(0,(omega+engineAcceleration*accelerationScale*dt)*30/Math.PI);
+ s.revHangRemaining=Math.max(0,(s.revHangRemaining||0)-dt);
  if(automatic&&s.running)s.rpm=clamp(s.rpm,DRIVING.initialIdleRpm,car.redline);
  if(s.running&&(!ratio||engagement<.22))s.rpm=Math.min(s.rpm,car.redline);
  if(s.running&&!automatic){

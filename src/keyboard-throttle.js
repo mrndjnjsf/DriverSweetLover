@@ -1,7 +1,8 @@
 import { THROTTLE } from './config/gameplay.js';
 
-export function advanceKeyboardThrottle(value, buildHeld, fullHeld, dt, settings=THROTTLE) {
-  if (fullHeld) return 1;
+export function advanceKeyboardThrottle(value, buildHeld, reduceHeld, dt, settings=THROTTLE) {
+  if (reduceHeld) return Math.max(0, value-settings.keyboardReducePerSecond*Math.max(0,dt));
+  if (!buildHeld) return value;
   const rate = buildHeld ? settings.keyboardBuildPerSecond : -settings.keyboardReleasePerSecond;
   const taper = settings.keyboardPressureTaper;
   const elapsed = Math.max(0, dt);
@@ -10,4 +11,16 @@ export function advanceKeyboardThrottle(value, buildHeld, fullHeld, dt, settings
   const next = taper === 0 ? value + rate * elapsed
     : value + (1 - taper * value) * -Math.expm1(-rate * taper * elapsed) / taper;
   return Math.max(0, Math.min(1, next));
+}
+
+export function createKeyboardThrottle(){return {value:0,coastSeconds:0};}
+
+export function advanceThrottlePressure(control,buildHeld,reduceHeld,dt,settings=THROTTLE){
+  const elapsed=Math.max(0,dt);
+  if(buildHeld||reduceHeld)return {value:advanceKeyboardThrottle(control.value,buildHeld,reduceHeld,elapsed,settings),coastSeconds:0};
+  const coastSeconds=control.coastSeconds+elapsed;
+  const decaySeconds=Math.max(0,coastSeconds-settings.keyboardCoastSeconds)-Math.max(0,control.coastSeconds-settings.keyboardCoastSeconds);
+  const taper=settings.keyboardPressureTaper,rate=-settings.keyboardReleasePerSecond;
+  const value=taper===0?control.value+rate*decaySeconds:control.value+(1-taper*control.value)*-Math.expm1(-rate*taper*decaySeconds)/taper;
+  return {value:Math.max(0,Math.min(1,value)),coastSeconds};
 }

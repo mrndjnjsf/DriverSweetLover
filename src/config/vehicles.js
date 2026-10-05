@@ -27,6 +27,7 @@ export const VEHICLES = {
     traction: 8.5,
   },
   civic: {
+    revHangSeconds: .2, revHangDecelerationScale: .25,
     reverseGate: { lane: 2, row: 1 },
     name: 'Honda Civic Si',
     mass: 1340,

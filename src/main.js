@@ -61,7 +61,7 @@ import {engineTone} from './engine-audio.js';
 import {torqueCameraPull,easeCameraPull} from './camera-response.js';
 import {createClutchInput,toggleClutchInput,readClutchInput} from './clutch-input.js';
 import {advanceKeyboardClutch} from './keyboard-clutch.js';
-import {advanceKeyboardThrottle} from './keyboard-throttle.js';
+import {createKeyboardThrottle,advanceThrottlePressure} from './keyboard-throttle.js';
 import {PART_KEYS,createVehicleCondition,applyDrivingWear,clutchFrictionWork,applyImpactDamage,conditionSummary,getServiceQuote,performanceModifiers} from './condition.js';
 import {MIN_SHIFT_CLUTCH} from './clutch-model.js';
 import {changeGearWithWear} from './gear-change.js';
@@ -245,7 +245,7 @@ function makeCar(key){
  vehicleView.setVehicle(key,{appearance});
  $('appearance-select').value=appearance;
  $('rpm-fill').parentElement.style.setProperty('--redline-percent',`${tachPercent(cars[key].redline)}%`);
- document.querySelector('footer>span').textContent=cars[key].transmission==='automatic'?'AUTOMATIC · RT / SPACE GAS · LB / S / ALT BRAKE · LS / A D STEER · B REVERSE AT A STOP':'LT / CTRL CLUTCH · RT / SPACE GAS · RS / MOUSE SHIFTER · LS / A D STEER · LB / S / ALT BRAKE · B REVERSE · D-PAD CAMERA';
+ document.querySelector('footer>span').textContent=cars[key].transmission==='automatic'?'AUTOMATIC · RT GAS · C ADD / SPACE RELEASE · LB / S / ALT BRAKE · LS / A D STEER · B REVERSE AT A STOP':'LT / CTRL CLUTCH · RT GAS · C ADD / SPACE RELEASE · RS / MOUSE SHIFTER · LS / A D STEER · LB / S / ALT BRAKE · B REVERSE · D-PAD CAMERA';
  document.body.classList.toggle('automatic-car',cars[key].transmission==='automatic');
 }
 let selected=activeVehicle(career).vehicleId,state=createState(),shifterPos=neutralPosition(),neutralX=0,neutralHoldUntil=0,centerDetentUntil=0,verticalRepeat=null,outerGateSince=null,previousButtons=[],toastTimer=0,lastRunning=true,lastBlown=false,stickArmed=true;
@@ -589,8 +589,9 @@ window.addEventListener('pagehide',persistCareer);
 window.addEventListener('pagehide',persistCityTime);
 document.addEventListener('visibilitychange',()=>{previousTime=performance.now();if(document.visibilityState==='hidden'){persistCareer();persistCityTime();}});
 updateCareerHud();updateRaceHud();drawMiniMap();
+let keyboardThrottle=createKeyboardThrottle();
 const keys=new Set();let clutchKey=0,throttleKey=0,previousTime=performance.now();
-$('career-panel').addEventListener('pointerdown',()=>{keys.clear();throttleKey=0;releaseMouseShifter();});
+$('career-panel').addEventListener('pointerdown',()=>{keys.clear();throttleKey=0;keyboardThrottle=createKeyboardThrottle();releaseMouseShifter();});
 $('career-panel').addEventListener('keydown',e=>{if(e.code==='Escape'){e.preventDefault();phoneView.toggle();document.activeElement?.blur();}});
 const touchHeld=new Set(),touchClutch=$('touch-clutch');
 document.querySelectorAll('[data-control]').forEach(button=>{
@@ -613,7 +614,7 @@ function resetDrivingState(){
  shifterPos=neutralPosition();mouseCursor=null;neutralX=0;
  neutralHoldUntil=0;centerDetentUntil=0;verticalRepeat=null;outerGateSince=null;stickArmed=true;
  lastBlown=false;failureStart=0;$('engine-failure').hidden=true;
- clutchKey=0;throttleKey=0;touchClutch.value=100;$('touch-clutch-label').textContent='100%';
+ clutchKey=0;throttleKey=0;keyboardThrottle=createKeyboardThrottle();touchClutch.value=100;$('touch-clutch-label').textContent='100%';
 }
 function useCar(key){
  if(testDrivingMustang())leaveIntro();
@@ -747,7 +748,7 @@ window.addEventListener('keydown',e=>{
  if(e.code==='KeyP'){e.preventDefault();if(!playingIntro()&&!e.repeat&&!gamePaused())phoneView.toggle();return;}
  if(e.target instanceof Element&&e.target.closest('#career-panel'))return;
  if(e.code==='Enter'&&e.target instanceof Element&&e.target.closest('button'))return;
- if(['KeyA','KeyS','KeyD','KeyH','KeyV','KeyB','KeyN','KeyT','ControlLeft','ControlRight','AltLeft','AltRight','Space','Enter','KeyR','Digit1','Digit2','Digit3','Digit4'].includes(e.code))e.preventDefault();
+ if(['KeyA','KeyS','KeyD','KeyH','KeyC','KeyB','KeyN','KeyT','ControlLeft','ControlRight','AltLeft','AltRight','Space','Enter','KeyR','Digit1','Digit2','Digit3','Digit4'].includes(e.code))e.preventDefault();
  if(gamePaused())return;
  if(e.repeat)return;
  keys.add(e.code);
@@ -762,7 +763,7 @@ window.addEventListener('keydown',e=>{
  if(keyboardViews[e.code])setCameraView(keyboardViews[e.code]);
 });
 window.addEventListener('keyup',e=>{keys.delete(e.code);if((e.code==='ControlLeft'||e.code==='ControlRight')&&!pressed('ControlLeft','ControlRight')){releaseMouseShifter();if(shifterPos.row===0&&shifterPos.lane!==0)neutralHoldUntil=performance.now()+SHIFTER.gearExitHoldMs;}});
-window.addEventListener('blur',()=>{keys.clear();throttleKey=0;releaseMouseShifter();});
+window.addEventListener('blur',()=>{keys.clear();throttleKey=0;keyboardThrottle=createKeyboardThrottle();releaseMouseShifter();});
 const pressed=(...codes)=>codes.some(c=>keys.has(c));
 let mouseCursor=null,mouseCaptureFallback=false,mouseLockWarned=false,mouseLockAttempts=0,edgeX=0,edgeY=0,edgeXUntil=0,edgeYUntil=0;
 function enableMouseEdgeAssist(){
@@ -820,8 +821,8 @@ function processController(pad,clutch){
 }
 function readInput(dt){
  const pad=gamepad();
- if(pad||touchLayout.matches)throttleKey=0;
- setTextIfChanged($('input-status'),pad?`Controller connected · ${pad.id.split(' (')[0]}`:'Ctrl + mouse shift · Space builds gas · V full gas · S / Alt brake');
+ if(pad||touchLayout.matches){throttleKey=0;keyboardThrottle=createKeyboardThrottle();}
+ setTextIfChanged($('input-status'),pad?`Controller connected · ${pad.id.split(' (')[0]}`:'Ctrl + mouse shift · C adds gas · Space releases gas · S / Alt brake');
  if(pad){
   if(pad.buttons[10]?.pressed&&!previousButtons[10]){
    controllerClutch=toggleClutchInput(controllerClutch);
@@ -842,7 +843,7 @@ function readInput(dt){
  const clutchTarget=pressed('ControlLeft','ControlRight')?1:0;
  const pedals=tunedCarFor(activeVehicle(career)).pedals;
  clutchKey=advanceKeyboardClutch(clutchKey,Boolean(clutchTarget),dt,pedals.clutch);
- throttleKey=advanceKeyboardThrottle(throttleKey,pressed('Space'),pressed('KeyV'),dt,pedals.throttle);
+ keyboardThrottle=advanceThrottlePressure(keyboardThrottle,pressed('KeyC'),pressed('Space'),dt,pedals.throttle);throttleKey=keyboardThrottle.value;
  return {steer:(pressed('KeyD')?1:0)-(pressed('KeyA')?1:0),throttle:throttleKey,clutch:clutchKey,brake:pressed('KeyS','AltLeft','AltRight')?1:0,handbrake:pressed('KeyH')};
 }
 function updateHud(dt){
@@ -1030,7 +1031,7 @@ function frame(now){
   if(dx||dy)applyMouseThrow(dx,dy,now);
  }
  const previousPose={x:state.x,z:state.z,heading:state.heading,speed:state.speed};
- if(paused)throttleKey=0;
+ if(paused){throttleKey=0;keyboardThrottle=createKeyboardThrottle();}
  const input=paused?{clutch:state.clutch,throttle:0,brake:0,steer:0,handbrake:false}:readInput(dt);
  let parkedImpact=null;
  const oldBoost=state.boost;
